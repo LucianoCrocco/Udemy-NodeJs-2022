@@ -1,0 +1,59 @@
+Enteniendo los conceptos básicos
+
+1. Introducción al módulo
+¿Que veremos en este módulo?
+Como funciona la Web y que rol cumple NodeJs
+Creación de un servidor de Node.js
+Módulos que trae el núcleo de NodeJs
+Trabajar con peticiones y respuestas básicas
+Código asíncronico y Event Loop en NodeJs
+
+2. Como funciona la Web
+Tenemos usuarios/clientes que interactuan con una página web.
+El proceso sería el siguiente:
+-Un usuario entra a tu página web, detrás de escena el navegador busca algunos servidores de nombres de dominio. El dominio (nombre del sitio) realmente no es la dirección del sitio, es una codificación en algo que los humanos podamos entender. El servidor en sí tiene una dirección IP que es a lo que detrás de escena se conecta el cliente. 
+-Una vez encontrado este dominio se envía una petición al servidor con la dirección IP que pertenece a ese dominio.
+-El servidor tiene escrito código que nosotros u otras personas hicimos para esa computadora en esa dirección IP y ese código es el encargado de manejar la petición y hacer algo con ella, en general se devuelve una respuesta a esa petición al cliente. La repuesta puede ser codigo HTML que luego será manejado por el cliente pero puede ser tambien otro tipo de dato, como JSON, XML, archivos, etc.
+-La respuesta no solo tiene contenido, también tiene headers que es meta information adjunta a la respuesta y a la petición, y describe que hay dentro. 
+-Esa transmisión esta hecha bajo un protocolo (que es una forma estandarizada de comunicarse), que son reglas a seguir para lograr la comunicación. Estas reglas son definidas por el protocolo que usemos, HTTP o HTTPS.
+-HTTP (Hyper Text Transfer Protocol) es un protoclo para transferir información que es entendida tanto por el navegador como por el servidor. Ahí esta definido como una petición valida deberia verse y como la información debería ser transferida del navegador al servidor y viceversa.
+-HTTPS (Hyper Text Transfer Protocol Secure) es básicamente lo mismo que HTTP y añade encriptación SSL que logra que la información transmitida este encriptada así nadie colgado en la conección puede husmear los datos
+
+3. Creando un servidor de NodeJs
+https://nodejs.org/api/http.html
+https://www.w3schools.com/nodejs/func_http_requestlistener.asp
+Normalmente el punto de entrada lo nombramos como server.js o app.js. Lo llamamos así porque es el archivo raíz que hace a nuestra aplicación y es el archivo que va a ejecutar una computadora en la nube en un servidor.
+
+Hay un puñado de funciones y objetos que utilizamos de manera global sin importar nada con JavaScript tanto en el servidor como en el navegador, pero en general, la mayoría de las funcionalidades no están disponibles de forma predeterminada.
+
+Para trabajar con un servidor tenemos que importar algunas funcionalidades del núcleo de NodeJs, otras funcionalidades no vienen integradas y para integrarlas utilizaremos el Node Package Manager (npm).
+
+Algunos de los modelos del núcleo de NodeJs: http, https, fs, path, os.
+Los módulos http y https son muy útiles cuando se trata de crear un servidor y trabajar con solicitudes y respuestas http. De hecho, http nos ayuda a iniciar un servidor o también con otras como enviar solicitudes porque una aplicación de node tmabién podría enviar una solicitud a otro servidor, hacer que varios servidores se comuniquen entre sí.
+https sería útil cuando queremos lanzar un servidor codificado SSL, donde todos los datos que se transfieren son encriptados. Esta funcionalidad la veremos mas adelante en el curso.
+
+Para importar estas funcionalidades del núcleo de NodeJs asignamos a una variable la importación y utilizamos require("nombre") para importar.
+requiere es una palabra reservada, una función especial que NodeJs expone globalmente, por lo que podemos utilizarla por default en cualquier archivo que se ejecute a través de NodeJs
+requiere toma un PATH a otro archivo, por lo tanto podemos importar otros archivos JavaScript o si no tiene una ruta a un archivo, también puede importar un módulo del núcleo. Los PATHS siempre tienen que empezar con ./ para el relativo y / para el absoluto, es importante distinguir que si escribimos un PATH va a buscar un archivo en la carpeta y no un módulo, los módulos globales se importan simplemente escribiendo el nombre. Al igual que React no hace falta agregar la extensión .js al final.
+
+El módulo http tiene una función createServer() que recibe en sus parametros un request listener. Un request listener es una función que se ejecutará para cada solicitud/petición entrante (Asocia una función a un evento). La función devuelve un servidor, así que para poder levantarlo y hacer procesos con el mismo debemos alamcernarlo en una variable y manipularla según nuestra necesidad.
+Una función importante de nuestro servidor es la funcion listen(). Esta función inicia un proceso en el que nodejs no saldra inmediatemente nuestro script, sino que nodejs lo mantendrá en ejecución para "escuchar" las solicitudes entrantes.
+listen()  argumentos opcionales. El primero es el puerto en el que queremos escuchar. En producción este campo no se utiliza y tomará por default el puerto 80. El segundo es un hostname, por defecto será el de la maquina que lo ejecuta, para nuestra maquina sera el localhost.
+
+4. El ciclo de vida de NodeJs y Bucle de eventos
+Creamos el archivo y lo ejecutamos con node app.js -> Comienza la ejecución del script (Parsea el codigo, registra variables y funcones) -> El script queda en loop y nunca termina gracias al concepto de bucle de eventos (event loop)
+
+El Event Loop es basicamente un proceso de bucle que es administrado por nodejs que sigue funcionando mientras haya trabajo que hacer, es decir, mientras haya event listener registrados.
+Nuetra aplicación de NodeJs básicamente es administrada por este bucle de eventos, todo nuestro código es administrado por esto y, como se mecionoó, NodeJs usa un enfoque impulsado por eventos para todo tipo de cosas, no solo para administrar el servidor (que es una parte crucial) pero se verá mucho en el curso, por ejemplo, cuando accedamos a una base de datos.
+
+NodeJs utiliza este patrón porque JavaScript se ejecuta en un solo hilo. Entonces, todo el proceso de node usa un hilo en nuestra computadora que esta ejecutando el codigo. 
+Como podemos imaginar si creamos un servidor de node éste debería de ser capaz de manejar múltiples, miles, decenas de miles o ciento de miles de soliciutdes entrantes. Ejecutandose en un solo hilo se detendría y luego haría algo con esa solicitud, lo que lo haría extremadamente lento e ineficiente. Por lo tanto utiliza este concepto de bucle de eventos donde al final siempre sigue ejecutándose y solo ejecuta código cuando ocurre un determinado evento, así que en general siempre esta disponible. Si bien podemos pensar que si llegan dos peticiones al mismo tiempo necesita manejar dos eventos, es muy rápido en el manejo de estas solicitudes y, en realidad, detrás de escena, realiza algunos subprocesos múltiples al aprovechar el sistema operativo.
+Resumiendo, el Evento Loop es una parte escencial que básicamente tiene un bucle continuo siempre que haya oyentes (crear un servidor crea un oyente que nunca para). Pero si finalmente se anula el registro (se puede hacer con process.exit(), hace un hard exit) se terminaría. Por lo general el process.exit() no se utiliza porque no queremos cerrar el servidor, si se cierra los clientes no podrán acceder a nuestra página.
+
+5. Entendiendo las peticiones
+En el callback que le pasamos a nuestro createServer tenemos dos objetos que nos genera NodeJs. Uno es la petición y otro es la respuesta.
+El objeto de la petición es el objeto que tiene los datos de la petición cuando visitamos el puerto que indicamos.
+El objeto en sí es complejo, tiene muchos datos, funciones que podemos llamar, etc. También podemos observar que viene con headers, los headers son meta-datos/meta-información añadida a la petición (también a respuestas). En ella podemos ver el host, headers que vienen arraigados al navegador, como la respuesta se debe cachear y cosas de ese estilo. 
+Hay muchos datos que podemos tomar, pero los más importantes son: url? (La URL es todo lo que viene después del nombre del dominio/localhost), method, headers.
+
+6. Enviando respuestas
