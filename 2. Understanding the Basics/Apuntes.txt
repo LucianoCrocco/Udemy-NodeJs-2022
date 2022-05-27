@@ -8,6 +8,13 @@ Módulos que trae el núcleo de NodeJs
 Trabajar con peticiones y respuestas básicas
 Código asíncronico y Event Loop en NodeJs
 
+Official Node.js Docs: https://nodejs.org/en/docs/guides/
+Full Node.js Reference (for all core modules): https://nodejs.org/dist/latest/docs/api/
+More about the Node.js Event Loop: https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/
+Blocking and Non-Blocking Code: https://nodejs.org/en/docs/guides/dont-block-the-event-loop/
+
+
+
 2. Como funciona la Web
 Tenemos usuarios/clientes que interactuan con una página web.
 El proceso sería el siguiente:
@@ -36,12 +43,12 @@ Para importar estas funcionalidades del núcleo de NodeJs asignamos a una variab
 requiere es una palabra reservada, una función especial que NodeJs expone globalmente, por lo que podemos utilizarla por default en cualquier archivo que se ejecute a través de NodeJs
 requiere toma un PATH a otro archivo, por lo tanto podemos importar otros archivos JavaScript o si no tiene una ruta a un archivo, también puede importar un módulo del núcleo. Los PATHS siempre tienen que empezar con ./ para el relativo y / para el absoluto, es importante distinguir que si escribimos un PATH va a buscar un archivo en la carpeta y no un módulo, los módulos globales se importan simplemente escribiendo el nombre. Al igual que React no hace falta agregar la extensión .js al final.
 
-El módulo http tiene una función createServer() que recibe en sus parametros un request listener. Un request listener es una función que se ejecutará para cada solicitud/petición entrante (Asocia una función a un evento). La función devuelve un servidor, así que para poder levantarlo y hacer procesos con el mismo debemos alamcernarlo en una variable y manipularla según nuestra necesidad.
+El módulo http tiene una función createServer([options?],requestListener?) que recibe en sus parametros un request listener. Un request listener es una función que se ejecutará para cada solicitud/petición entrante (Asocia una función a un evento, la request es un objeto IncomingMessage y la repuesta es un objeto ServerResponse). La función createServer devuelve un servidor, así que para poder levantarlo y hacer procesos con el mismo debemos alamcernarlo en una variable y manipularla según nuestra necesidad.
 Una función importante de nuestro servidor es la funcion listen(). Esta función inicia un proceso en el que nodejs no saldra inmediatemente nuestro script, sino que nodejs lo mantendrá en ejecución para "escuchar" las solicitudes entrantes.
 listen()  argumentos opcionales. El primero es el puerto en el que queremos escuchar. En producción este campo no se utiliza y tomará por default el puerto 80. El segundo es un hostname, por defecto será el de la maquina que lo ejecuta, para nuestra maquina sera el localhost.
 
 4. El ciclo de vida de NodeJs y Bucle de eventos
-Creamos el archivo y lo ejecutamos con node app.js -> Comienza la ejecución del script (Parsea el codigo, registra variables y funcones) -> El script queda en loop y nunca termina gracias al concepto de bucle de eventos (event loop)
+Creamos el archivo y lo ejecutamos con node app.js -> Comienza la ejecución del script (Parsea el codigo, registra variables y funcones) -> El script queda en loop y nunca termina gracias al concepto de bucle de eventos (event loop, en este caso se ejecuta gracias al metodo listen() del server)
 
 El Event Loop es basicamente un proceso de bucle que es administrado por nodejs que sigue funcionando mientras haya trabajo que hacer, es decir, mientras haya event listener registrados.
 Nuetra aplicación de NodeJs básicamente es administrada por este bucle de eventos, todo nuestro código es administrado por esto y, como se mecionoó, NodeJs usa un enfoque impulsado por eventos para todo tipo de cosas, no solo para administrar el servidor (que es una parte crucial) pero se verá mucho en el curso, por ejemplo, cuando accedamos a una base de datos.
@@ -51,9 +58,134 @@ Como podemos imaginar si creamos un servidor de node éste debería de ser capaz
 Resumiendo, el Evento Loop es una parte escencial que básicamente tiene un bucle continuo siempre que haya oyentes (crear un servidor crea un oyente que nunca para). Pero si finalmente se anula el registro (se puede hacer con process.exit(), hace un hard exit) se terminaría. Por lo general el process.exit() no se utiliza porque no queremos cerrar el servidor, si se cierra los clientes no podrán acceder a nuestra página.
 
 5. Entendiendo las peticiones
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers
 En el callback que le pasamos a nuestro createServer tenemos dos objetos que nos genera NodeJs. Uno es la petición y otro es la respuesta.
 El objeto de la petición es el objeto que tiene los datos de la petición cuando visitamos el puerto que indicamos.
 El objeto en sí es complejo, tiene muchos datos, funciones que podemos llamar, etc. También podemos observar que viene con headers, los headers son meta-datos/meta-información añadida a la petición (también a respuestas). En ella podemos ver el host, headers que vienen arraigados al navegador, como la respuesta se debe cachear y cosas de ese estilo. 
-Hay muchos datos que podemos tomar, pero los más importantes son: url? (La URL es todo lo que viene después del nombre del dominio/localhost), method, headers.
+Hay muchos datos que podemos tomar, pero los más importantes son: url (La URL es todo lo que viene después del nombre del dominio/localhost), method, headers.
 
 6. Enviando respuestas
+Response tiene un monton de metodos por los cuales vamos a poder devolverle al cliente una respuesta a una petición. Una de los metodos es el setHeader("key", "value"), en el cual podemos, por ejemplo, adjuntar el Content-Type que vamos a devolver como metadato.
+La función write("CONTENIDO") nos permite escribir datos a la respuesta y funciona escribiendo multiples lineas de respuesta.
+Una vez utilizada estas funciones usamos la funcion end(). No debemos escribir despues de cerrar la respuesta ya que genera un error. Tambien podriamos retornar response.end() para terminar en ese momento el bloque de codigo y asegurarnos que no se ejecutará nada después.
+Estas funcionalidades se van a acotar y ser mucho mas faciles ya que utilizaremos el framework Express.Js
+
+7. Headers de peticiones y respuestas
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers
+
+8. Ruteo y redirección de peticiones.
+https://developer.mozilla.org/es/docs/Web/HTTP/Status
+https://www.geeksforgeeks.org/node-js-response-writehead-method/
+https://nodejs.org/api/http.html#responsewriteheadstatuscode-statusmessage-headers
+https://http.cat/
+
+En vez de escribir información de la peticion en la consola, lo que por supuesto no hace mucho, vamos a escribir un servidor web que hace diferentes cosas dependiendo de la ruta que ingresemos. Dependiendo de que venga después del / en la URL vamos a enviar ciertas respuestas al cliente, accedemos con el metodo url al PATH de la peticion para saber donde ingreso el cliente despues del .com, .com.ar, etc (Comienza con / si no hay nada).
+El cliente puede, por ejemplo, enviar un formulario con el action="/URL" para luego ser tratado, de esta manera ruteamos un lugar de nuestra pagina.
+Los formularios no solo envian la peticion sino que buscan todos los inputs/selects del formulario y lo asocian con un key:value, siendo la key el name que tiene ese campo.
+
+La redirección serviria, por ejemplo, para cuando enviamos un formulario a una URL determinada. Esa URL simplmente maneja la información de la peticion y una vez manejada redireccionamos a otra pagina y deplegar la información que querramos (datos validos, invalidos, volver al inicio y un simple alert box, etc). Hay que tener en cuenta que esa URL que se envia en un formulario para tratar la información debería verificar ciertos parametros asi los usuarios no ingresan simplemente con el /PATH.
+El codigo 302 es de redireccion. Para redireccionar podemos usar el metodo writeHead('CODIGO HTTP',  {HEADERS});. El metodo básicamente nos permite escribir meta-information de una sola vez. Tambien los metodos statusCode y setHeader.
+Una vez realizado el codigo cierro la respuesta y la retorno y/o me aseguro que la funcion termine alli.
+Ejemplo: response.writeHead(302, {"Location":"/"});
+response.statusCode(302));
+response.setHeader({"Location":/"/"})
+
+9. Parsing del cuerpo de la petición
+Los datos llegan basicamente como un "stream of data" que tiene un constructor especial en JavaScript.
+¿Que es un stream of data y como se conecta con los buffers?
+Un stream es basicamente un proceso en curso que es leída por node en trozos y en un momento del tiempo finaliza. Esta hecho así ya que en teoria podriamos empezar a trabajar con estos trozos antes de que finalice la lectura de la petición.
+Podemos empezar a trabajar con la data enviada desde temprano, sin embargo, con nuestro codigo no podemos intentar trabajar arbitrarimente con los chunks que llegan. Para organizar estos chunks trabajamos con un buffer (El buffer es como una parada de autobus, donde necesitamos que pare y sube/baje personas y haya un registro/seguimiento de ello). Basicamente es un constructor que permite mantener multiples chunks y trabajar con ellos antes de que termines.
+Cuando recibimos un mensaje, antes de retornarlo, darle tratamiento o escribir metadata vamos a escuchar un event listener llamado "on", este evento puede escuchar a varias partes pero a nostoros nos interesa el evento on.("data", "callback"). 
+El evento data sera lanzado cada vez que un nuevo chunk esta listo para ser leido. El callback es el que va a manejar esa data y recibe en sus parametros el chunk que llega.
+
+Para leer el body la idea es generar un array en una constante para que no se pueda sobreescribir esa data (si se sobre escribe el contenido del array) y por cada chunk que llega pushearlo en el array.
+
+Tambien tenemos que trabajar con otro evento dentro del on.("end", callback) llamado end. Este evento se lanzara cuando termine de parsear la peticion entrante. Segun el ejemplo, se lanza el evento cuando todos los chunks ya fueron parseados. También recibe una función que va a manejar esa data que pusheamos en el evento "on".
+Para interactuar con todos estos chunks guardados tenemos que utilizar la clase estatica Buffer (El buffer, en el ejemplo anterior, seria algo asi como una parada del autobus). En el ejemplo creamos una nueva constante y le asignamos el objeto Buffer.concat(body).toString(). Lo convertimos a String como un ejemplo porque SABEMOS que es texto lo que llega, depende del tipo puede variar.
+Ejemplo:
+const body = [];
+request.on('data', (chunk) => {
+    body.push(chunk); -> <Buffer 6d 65 73 73 61 67 65 3d 64 73 61 73 64>
+    console.log(chunk);
+});
+request.on("end", () => {
+    const parsedBody = Buffer.concat(body).toString();
+    console.log(parsedBody); -> message=dsasd Dice message porque el input name asociado es ese.
+})
+
+Todo lo que venimos viendo es raw logic, Express.js nos oculta todo esto pero para entender como y porque usamos Express primero tenemos que saber que esta pasando detrás de bambalinas.
+
+10. Entendiendo ejecución de código controlado por eventos
+El orden de ejecución del código nos es precisamente en el orden que lo escribimos.
+Por ejemplo, los eventos on.(EveList, callback) se pueden seguir ejecutando y nostoros podriamos haber devuelto la respuesta y redirigido al cliente.
+Enviar la respuesta no significa que nuestros event listeners estén muertos. Se seguirán ejecutando aún si la respuesta ya fue enviada. También tenemos que tener en cuenta que si la respuesta esta influencia por estos eventos no debemos enviar la respuesta hasta que finalicen. Una solución partiendo del ejemplo sería mover el return de la respuesta adentro del evento on.("end", callback).
+
+Estos son algunos ejemplos de como se ejecutan de manera asincronica algunas funciones callback de los eventos.
+
+Cuando encuentra un event listener simplemente lo añade internamente y nodeJs se ocupa de ejecutar el calllback cuando se lancen los eventos.
+
+Se podria pensar como que NodeJs tiene registros internos de eventos y los callbacks. Se encarga de manejar toda la logica de cuando ejecutarlos gracias a su registros. 
+
+Los Eventos se registran internamente y los callbacks asociados se van a llamar cuando se lanzan los eventos. Mientras tanto va a seguir con las siguientes lineas de codigo. Para evitar esto, si queremos bloquear nuestro stack con un evento tendriamos que asignar la palabra return al evento.
+
+11. Codigo bloqueante y no bloqueante
+writeFileSync se ejecuta, como dice su nombre, de manera sincronia. La sincronia hace que se bloquee el stack y ninguna instrucción más se ejecute hasta que ese línea no haya terminado su proceso.
+Si tenemos un texto simple para guardar como hicimos en esta sección lleva un tiempo despreciable, pero si trabajamos con muchisima información podemos llevar a trabajar de manera significativa el stack. Para que esto no suceda tenemos una funcion que es simplemente writeFile, esta funcion es asincronica y recibe además del PATH y el objeto a escribir un callback que a su vez recibe por parametros un error, el error se ejecuta por si en algun momento fallo asincronicamente y a su vez ese callback tambien maneja el objeto recibido.
+
+Ejemplo SIN MANEJO DEL ERROR - Bloqueando el codigo restante con el evento
+return request.on("end", () => {
+    const parsedBody = Buffer.concat(body).toString();
+    const message = parsedBody.split("=")[1];
+    fs.writeFile("./message.txt", message, err => {
+        response.writeHead(302, {"Location":"/"});
+        return response.end();
+    })
+})
+
+12. Node.js - Mirando detrás de escenas
+Single Thread, Event Loop & Blocking Code
+NodeJs utiliza solo un hilo de ejecución de JavaScript. Un hilo es como un proceso que realiza el Sistema Operativo.
+El Event Loop inicia automaticamente por NodeJs cuando nuestro programa se arranca. Es el encargado de manejar los event callbacks, sin embargo esto no nos ayuda si tenemos que manejar archivos pesados, los event loops ejecutan codigo de finalizacion rapida.
+FileSystem y otro tipo de operaciones similares se envian a un Worker Pool (Manejado y automatizado por NodeJs), que es el encargado de hacer todo el trabajo pesado. Este Worker Pool esta practicamente separado de código JavaScript (Ya sea el Event Loop, código, peticiones, etc) y se ejecuta en diferentes hilos e interviente muy de cerca con el SO. Si bien esta separado de JavaScript tiene una conexión con el Event Loop, esto se logra una vez que el Worker finalice y el mismo Worker lanzará el callback apropiado.
+Simplficando a partir de eventos se podria decir que tenemos la siguiente logica: Se registra el evento al inicio de NodeJs -> FileSystem y módulos de ese tipo se ejecutan en el Worker Pool -> Una vez finalizado ese Worker Pool se ejecuta el callback del evento con el Worker ya retornado.
+
+El Event Loop es al final un loop que es iniciado y manejado por NodeJs. Maneja todos los callbacks y maneja cierto order en el cual tienen que ejecutarse. El orden del Event Loop va de la siguiente manera: 
+Timers (Puede estar en otra fase y volver a esta sin problemas) -> Callbacks pendientes de tipo Input Output (Disk, Network & Blocking Operations) y Callbacks en cola -> Fase Poll, donde NodeJs busca nuevos eventos de tipo Input Output y ejecuta sus callbacks -> Fase Check, ejecuta setImmediate() callbacks -> Close Event Callbacks. -> Si no hay mas manejadores registrados hace un exit.
+
+13. Usando el Node Module System
+Para exportar una funcion utilizamos module.exports = FUNCION/OBJETO y para importarlo utilizamos el requiere y le damos el PATH al archivo donde se encuentra esa exportación.
+El archivo exportado es cacheado por Node y no puede ser editado externamente/on the fly.
+
+Tambien podemos exportar mas de una funcion si lo asignamos como un objeto y desestructurando luego en la importación. Ejemplo: 
+module.exports = {
+    requestHandler
+}
+const {requestHandler}= require("PATH");
+
+Otra manera puede ser module.exports.NOMBRE = FUNCION/OBJETO
+
+14. Resumén del módulo
+¿Como funciona la web?
+Cliente => Peticion => Servidor => Respuesta => Cliente
+
+Ciclo de vida del programa y Event Loop
+Node.js corre de manera no bloqueante JavaScript y usa Event-Driven code ("Event Loop") para ejecutar la lógica
+Un programa de Node deja de ejecutarse tan pronto como no haya más trabajo que hacer.
+Nota: El evento createServer() nunca termina por default.
+
+Codigo Asincronico
+JS es no bloqueante
+Usa callbacks y eveentos => Los ordenes cambian!
+
+Trabajar con Peticiones y Respuestas
+Parsear data en chunks (Streams y Buffers)
+Evitar "doble respuestas"
+
+Node.js y sus Core Modules
+Node.js viene con multiples core modules (http, fs, path, ...)
+Core modules pueden ser importados a cualquier archivo que los requiera
+Importación via require("module")
+
+El Node Module System
+Importacion via requiere("./path") o requiere("module") para core modules y core modules de terceros.
+Exportación via module.exports = FUNCION, module.exports.NAME = FUNCION, module.exports = {FUNCIONES}, exports, etc.
