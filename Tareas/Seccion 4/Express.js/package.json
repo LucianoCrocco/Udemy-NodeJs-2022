@@ -1,0 +1,18 @@
+{
+  "devDependencies": {
+    "nodemon": "^2.0.16"
+  },
+  "dependencies": {
+    "express": "^4.18.1"
+  },
+  "name": "tarea-seccion04-express",
+  "version": "1.0.0",
+  "description": "Seccion 4 - Tarea: Round Up de lo visto con Express hasta el momento",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js"
+  },
+  "author": "Luciano Crocco",
+  "license": "ISC"
+}

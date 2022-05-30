@@ -6,8 +6,7 @@ More on debugging Node.js: https://nodejs.org/en/docs/guides/debugging-getting-s
 Debugging Node in Visual Studio Code: https://code.visualstudio.com/docs/nodejs/nodejs-debugging
 
 
-
-1. Uderstanding NPM Scripts
+1. Entendiendo los NPM Scripts
 https://docs.npmjs.com/cli/v8/commands/npm-init/
 Siempre que levantamos el servidor teniamos que utilizar "node app.js", si bien no conlleva mucho trabajo existe la posibilidad de definir algunos scripts en un proyecto de NodeJs que nos pueden ayudar con este tipo de tareas y muchas otras.
 Para habilitar esta opcion tenemos que user NPM (Node Package Manager), es instalado junto con NodeJs. Utilizamos NPM para instalar paquetes de terceros, es decir, paquetes que no estan en incluidos en los Core Modules, ya sean pequeños features, funcionalidades complejas, etc.
@@ -15,7 +14,9 @@ Para habilitar esta opcion tenemos que user NPM (Node Package Manager), es insta
 Con npm init podemos setear un paquete nuevo o uno existente. Creará un archivo de configuración package.json que será el encargado de indicarle al NPM que tipo de paquetes tiene el proyecto, la version, descripcion, etc. También tiene una sección de scripts que colocando el nombre del script en el proyecto donde se hizo el npm init podemos ejecutar instrucciones simplemente con el nombre.
 Ejecutamos el script poniendo npm "NOMBRE" si el nombre es especial para npm. Si el nombre no es uno especial que reconoce NPM tengo que utiliza la sintaxis "npm run NOMBRE" 
 
-2. Installing 3rd Party Packages
+2. Instalando paquetes de terceros
+https://github.com/apex/up/issues/603
+https://stackoverflow.com/questions/9268259/how-do-you-prevent-install-of-devdependencies-npm-modules-for-node-js-package
 NPM nos permite instalar paquetes de terceros desde la bodega de NPM repository. La idea de los paquetes es tener un set de configuraciones y no tener que reinventar la rueda. Estos paquetes ademas de instalarse son manejados por NPM.
 
 Para el ejemplo de esta sección instalaremos un paquete que nos permite realizar cambios en el código y no tener que tirar y levantar el servidor para que tenga efecto.
@@ -39,15 +40,10 @@ npm install ira al package.json y hara un update/instalación a todos los paquet
 The last lectures contained important concepts about available Node.js features and how to unlock them.
 
 You can basically differentiate between:
-
 Global features: Keywords like const or function but also some global objects like process
-
 Core Node.js Modules: Examples would be the file-system module ("fs"), the path module ("path") or the Http module ("http")
-
 Third-party Modules: Installed via npm install - you can add any kind of feature to your app via this way
-
 Global features are always available, you don't need to import them into the files where you want to use them.
-
 Core Node.js Modules don't need to be installed (NO npm install is required) but you need to import them when you want to use features exposed by them.
 
 Example:
