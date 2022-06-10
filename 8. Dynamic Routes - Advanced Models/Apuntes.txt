@@ -1,0 +1,8 @@
+Dynamic Routes & Advanced Models
+
+En este modulo veremos como pasar de manera dinamica informacion a través de nuestras rutas. Queremos ser capaces de encondear informacion en la URL para, por ejemplo, para un ID, nombre, etc. Veremos en que casos podemos enviar informacion por la URL o por el body de una peticion.
+
+¿Que hay en este modulo?
+Pasar Route Params
+Uso de Query Params
+Mejorar nuestros Models

@@ -8,3 +8,5 @@ Secciones
 3. Improved Development Workflow and Debugging
 4. Working with Express.js
 5. Working with Dynamic Content & Adding Templating Engines
+6. The Model View Controller (MVC)
+7. Optional - Enhancing the App
