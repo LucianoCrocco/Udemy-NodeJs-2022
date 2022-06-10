@@ -1,0 +1,121 @@
+Working with Dynamic Content & Adding Templating Engines
+
+¿Que veremos en este modulo?
+Manejar data (sin una BdD)
+Renderizar contenido de manera dinamica en nuestras Views
+Uso de Templating Engines
+
+Useful resources:
+Pug Docs: https://pugjs.org/api/getting-started.html
+Handlebars Docs: https://handlebarsjs.com/
+EJS Docs: http://ejs.co/#docs
+
+1. Compartir data a traves de Peticiones y Usuarios
+Para trabajar con todas las peticiones entrantes podriamos declarar un array y por cada peticion que llega almacenarla dentro de ese array. Luego lo exportamos si queremos trabajar en otro archivo/compartir esa informacion.
+Si el servidor queda levantado y no se refresca (por ejemplo con nodemon si guardamos un cambio) ese array se mantiene a pesar de que el servidor es accedido desde distintos navegadores/IP's.
+
+Este tipo de comparticion practicamente nunca (por no decir nunca) lo vamos a implementar. Nosotros siempre vamos a querer hacer un fetch de la data de una peticion especifica, y si esa peticion es para todos los usuarios, si compartiriamos toda la informacion. Pero compartir toda la informacion de las peticiones entre distintos usuarios es algo que seguramente no queramos hacer. 
+Esa peticion puede tener otros privilegios dependiendo del usuario, informacion personal, etc. Por este tipo de motivos cada peticion debe ser tratada de manera unica.
+
+Mas adelante en el curso veremos como abandonar este patrón y aprenderemos tecnicas para compartir data para un unico usuario y no para todos como hacemos en esta seccion.
+
+2. Templating Engines - Overview
+Si queremos poner contenido dinamico en nuestras paginas HTML deberiamos usar algo llamado Template Engines. 
+Los templating Engines funcionan de la siguiente manera
+HTMLish Template -> Escribimos un archivo con mucho HTML. Pero tenemos unos placeholders donde podemos tener contenido Node/Express, el template engine entiende este tipo de sintaxis combinada y reemplaza el placeholder/snippet con codigo HTML. Este contenido que agrega el template engine es generado on the fly en el servidor por el mismo Template Engine. De esta manera el servidor genera contenido dinamico y el template engine lo renderiza en el HTML. Ese HTML con el contenido ya renderizado es enviado al cliente, por lo que el cliente nunca ve el Templating Engine en acción, siempre ocurre este proceso en el servidor.
+Todos los template engines que veremos van a ser de produccion. 
+npm --save install pug ejs express-handlebars
+
+Templating Engines que veremos en el curso
+EJS <p><%=  VARIABLE %></p> -> HTML normal y JS plano en el template
+PUG p #{VARIABLE} -> HTML minimalista y un lenguaje de template customizado.
+HandleBars <p>{{VARIABLE}}</p> -> HTML normal y un lenguaje de template customizado.
+Los 3 son gratuitos y utilizan diferente sintaxis, set de features, filosofia, etc.
+
+2. Instalacion de Template engines
+https://expressjs.com/es/api.html
+https://www.geeksforgeeks.org/express-js-app-set-function/
+Para usar PUG y los otros dos template engines tenemos que decirle/avisarle a Express que vamos a utilizar un template engine conforme con Express. Esto es una caracteristica de Express y no de NodeJs, con Node puro es muchisimo mas dificil y tendremos que hacer todo de manera manual.
+
+Para avisarle a Express que haremos uso de un template engine y que lo use para renderizar contenido de manera dinamica tenemos que, una vez creado Express en memoria, utilizar la funcion .set() para setear una configuracion global.
+.set() nos permite establecer cualquier valor de manera global en nuestra aplicación de Express, algunas palabras estan reservadas por Express, esto puede ser keys, configuraciones de items que Express no entiende. Podemos leer configuraciones de palabras no reservadas por Express con .get(), las reservadas van a cambiar el comportamiento de la app.
+Por ejemplo, en la configuracion podemos reemplazar algunas keys como "views" o "views engine" para decirle a Express donde encontrar las Dynamic Views o que utilizar cuando usemos un Dynamic Template respectivamente.
+
+"The app.set() function is used to assigns the setting name to value. You may store any value that you want, but certain names can be used to configure the behavior of the server."
+
+const app = express();
+app.set("view engine", "pug"); -> Como las tres vienen con soporte para Express se acoplan facilmente, de otra manera se necesitan mas configuraciones.
+app.set("views", "./views"); -> Donde se encuentran los templates
+
+
+3. Implementacion de Template Engines
+La extensión de un archivo PUG es .pug. Para renderizarlo vamos a utilizar la funcion .render() y no sendFile().
+.render("PATH", {"KEY : DATA"} ) Utiliza el template engine que definimos anteriormente y retorna esa plantilla. El PATH es el relativo a partir de la carpte donde le dijimos anteriormente donde estaban nuestro archivos del template engine. DATA es un objeto y recibe todos los objetos que va a renderizar, estos objetos deben estar acompañados por una KEY para referenciarlos en el template.
+res.render("shop", {prods : products, docTitle : "Shop"}) -> No necesitamos la extension ya que definimos PUG como nuestro Template Engine.
+Esta manera de pasar informacion funciona para todos los template engine.
+Si solo cambiamos algo en el template no tenemos que reiniciar el servidor ni lo hará nodemon porque los templates no son parte del server-side code, son basicamente templates que se recogen on the fly. Por lo tanto si se produce un cambio cuando hagamos una nueva peticion automaticamente traera los cambios.
+
+4. Renderizar PUG en la plantilla
+https://pugjs.org/api/getting-started.html
+https://pugjs.org/language/iteration.html
+Con las keys que pasamos al momento de utilizar la funcion .render() el template engine de PUG va a renderizar el valor de cada valor en la Key en su template.
+title #{docTitle}
+
+En la documentación podemos ver como iterar y realizar distintas operaciones.
+Ejemplo de iteracion en PUG:
+if KEY.length > 0 
+    .grid
+        each VALUE in _KEY
+            article.card.product-item 
+                header.card__header 
+                    h1.product__title #{_KEY.VALUE}
+else 
+    h1 No Products
+
+5.  Añadir Layout con PUG
+Un Layout nos permite establecer una estructura básica para no repetir codigo, por ejemplo el setup del HTML o la importacion de CSS, entre otras cosas.
+Por convencion crearemos una carpeta llamada layouts dentro de views.
+
+Con PUG podemos utilizar "hooks" que nos van a servir para poder ingresar mas contenido a ese layout.
+La palabra reservada para generar un bloque dinamico es "block NOMBRE", referenciando el nombre podemos generar mas lineas de codigo de ser necesario para nuestra pagina basada en el layout. 
+
+Para utilizar el layout desde un archivo pug utilizamos la nomenclatura extends PATH.pug, la extensión es importante en este caso
+
+Para inyectar contenido dentro de un hook simplemente volvemos a utilizar el block NOMBRE, al ser un archivo extendido PUG se va a dar cuenta que cuando se utilice block vamos a estar diciendole que inyecte contenido. Es importante identar.
+
+Ejemplo:
+extendes layouts/main-layout.pug
+
+block content
+    h1 Page Not Found!
+
+6. Haciendo reactivo el Layout
+Para que el layout reaccione de una u otra forma y cambie el estado de cierto codigo podemos pasarle una key con un valor y en un IF dependiendo del valor que busquemos hacer una u otra cosa.
+Puede llegar a servir, por ejemplo, para poner una clase CSS u otra.
+Ejemplo: 
+En el router: res.render("add-product",{pageTitle : "Add Product", path : "/admin/add-product"});
+En PUG: a(href="/admin/add-product" class=(path==='/admin/add-product' ? 'active' : "")) Add Product
+
+7. Trabajando con Handlebars
+https://handlebarsjs.com/
+HandleBars no es un paquete que se auto instale como PUG. Manualmente le tenemos que decir a Express que existe este tipo de template engine. Para ello tenemos que importar el modulo que instalamos con npm y asignarlo a una variable: const expressHbs = require("express-handlebars"). Luego con la variable donde inicializamos el servidor de express (const app = express();) vamos a poder referenciar este engine para que lo reconozca: app.engine("hbs", expressHbs({layoutsDir: ".views/layouts/", default: "main-layout"})); El primer parametro es el nombr, el segundo es un callback que va a ser la variable requerida cono funcion y el objeto que recibe el callback tiene referenciado donde guardamos el layout. Finalmente asignamos el template engine como hicimos con PUG: app.set("view engine", "handlebars");
+
+La extension de HandleBars es el nombre que le asignamos cuando le dijimos que engine usar a express.
+
+Solo soporta if statements de true o false.
+El resto es parecido a PUG, se diferencia como vimos anteriormente en sintaxis pero el concepto sigue siendo el mismo.
+
+8. EJS
+https://ejs.co/
+Es el que vamos a usar durante el resto del curso, muy parecido a PUG.
+EJS no soporta Layouts pero vamos a encontrar una solucion para por lo menos reutilizar ciertos bloques de codigo.
+Si queremos mostrar un valor en la posicion donde estamos colocando el placeholder utilizamos el = luego del %. <%=pageTitle%>
+Si no utilizamos el igual con la sintaxis <% %> podemos escribir Vanilla Js.
+Ejemplo:
+<% if (prods.length > 0) { %>
+<% } else { %>
+<% } %>
+
+EJS no soporta Layuouts, pero podemos generar bloques de codigo que se incluyan en una planilla.
+Por convencion estos bloques irán en una carpeta llamada includes
+<%-include("./includes/head.ejs")%> -> Sintaxis para incluir codigo de un archivo EJS a otro. Utilizamos el - porque de esta manera no imprimimos un valor en texto plano como con el = sino codigo HTML. Es para unescaped HTML code. Si no se entiende cambiar el - por el = y viceversa. Uno es para texto plano el otro para HTML.

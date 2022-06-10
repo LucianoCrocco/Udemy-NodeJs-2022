@@ -1,0 +1,39 @@
+The Model View Controller (MVC)
+
+En este modulo veremos un aspecto muy importante para la creacion de aplicaciones web back-end como la que estamos creando. Queremos seguir cierto patrón para estructurar nuestro código. Como separar logicamente nuestro codigo y las diferentes funciones/cosas que hace.
+Para ello veremos el patrón MVC. 
+
+Useful resources:
+More on MVC: https://developer.mozilla.org/en-US/docs/Glossary/MVC
+
+1. ¿Que es el modelo MVC?
+Se trata de una separacion de "preocupaciones", se asegura que diferentes partes del codigo hagan cosas distintas y saber claramente que parte es responsable de qué.
+MVC es un acronimo de Models, Views y Controllers.
+Views: Todo lo que el usuario ve al final, renderiza el contenido apropiado que el usuario ve. Practicamente no se relaciona con el código de nuestra app
+Models: Son básicamente objetos o es una parte del código responsable de representar los datos de nuestro código y trabajar con la información. Por ejemplo, guardar información, fetching data, clases, etc.
+Controllers: Los puntos de conexión entre los Models y las Views. Es el intermediario que contiene logica para la conexión entre ambos puntos. Se relaciona con Routes ya que las rutas son lo que define que metodo HTTP, que codigo se debe ejecutar segun el controlador. Los controladores estan dividos entre funciones Middleware.
+
+2. Controllers
+Toda la interacción que haciamos con la data en los Middleware tiene que pasar a un controlador. El Middleware simplemente debe filtrar si pasa o no la petición. No debe interactuar con datos, renderizar paginas, etc.
+
+Por convencion la carpeta se llamara "controllers"
+
+3. Models
+Por convencion se utiliza la carpeta models.
+
+4. Resumén del módulo
+
+Models
+Responsable de representar información
+Responsable de manejar información (guardar, fetching, updating, etc)
+No importa si manejamos la data en memoria, archivos, base de datos
+Contiene data-related logic
+
+View
+Lo que el usuario ve
+No deberia contener mucha lógica
+
+Controller
+Conectan el Model y View
+Solo deberia asegurarse que ambos se comuniquen (en ambas direcciones).
+

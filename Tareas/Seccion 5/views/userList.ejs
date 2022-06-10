@@ -1,0 +1,15 @@
+<%-include("./includes/head.ejs")%>
+    <% if(usrList.length > 0) { %>
+    <h1>Lista de usuarios</h1>
+    <main id="user-list">
+        <ul>
+            <% usrList.forEach(user => { %>
+                <li><%= user.usrName %></li>
+            <% }) %>
+        </ul>
+    </main>
+    <% } else { %>
+    <h1>No hay usuarios cargados</h1>
+    <% } %>
+</body>
+</html>
