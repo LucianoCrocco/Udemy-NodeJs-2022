@@ -1,0 +1,52 @@
+SQL Introduction
+
+Hasta el momento veniamos guardando informacion en archivos .json o compartiendo una variable en memoria entre lo modelos de la app. Estos metodos son muy ineficientes y nunca vamos a trabajar de esta manera.
+A partir de este modulo veremos como trabajar con una base de datos SQL.
+
+¿Que hay en este modulo?
+Diferentes tipos de base de datos (SQL vs noSQL)
+Uso de SQL en una Node.js App
+
+1. Eligiendo una base de datos
+El objetivo de una BdD es guardar informacion y que sea facil, eficiente y rapido de acceder a ella. Por eso utilizamos una BdD en vez de archivos, especialmente si la informacion va creciendo, tambien nos ayuda con cosas como no tener que leer todo el archivo para encontrar un pedazo de inforamcion.
+
+Para una base SQL podemos optar por el motor de MySQL y para una noSQL MongoDB.
+
+2. Introduccion SQL
+Las bases SQL se basan en tablas, y por cada tabla que vayamos a tener tenemos columnas una "key" y las filas son el valor de esa key, tengo 1 columna por X cantidad de filas.
+Las bases de datos SQL nos permiten relacionar distintas tablas a través de foreigns keys. Por ejemplo una tabla de ordenes donde guardamos el ID del pedido y el ID del usuario, ese pedido a su vez genera su propio ID.
+
+Caracteristicas mas marcadas de SQL
+Esquema de datos bien definido. Por cada tabla establecemos de manera clara como la data tiene que guararse (tipo, tamaño, null, etc).
+Relacion y conexion entre las tablas. Puede ser 1 a 1, 1 a varias o varias a varias.
+
+SQL es un acronimo de Simple Query Language. Los Query con comandos que utilizamos para interactuar con la BdD. Un ejemplo de una query podria ser: SELECT * FROM users WHERE age > 28. Como vemos tiene su propia sintaxis con sus palabras reservadas y a eso le pasamos parametros con datos.
+
+3. Introduccion NoSQL
+El nombre NoSQL simplemente significa que no sigue el enfoque que sigue SQL, tambien usa otro tipo de lenguaje para consultas.
+En vez de tener esquema o relaciones NoSQL tiene otro foco. Podemos seguir teniendo una BdD con el nombre al igual que en SQL, pero en vez de tener tablas, en NoSQL esas "tablas" se las denominan colecciones, podemos pensarlas como un equivalente a las tablas. En las colecciones tenemos documentos que son generalmente objetos clave:valor en formato JSON.
+NoSQL no tiene un esquema de datos estricto, podemos tener diferentes estructuras en los documentos de las colecciones.
+No existen las relaciones reales, en vez utilizamos informacion duplicada. Por ejemplo puedo tener una coleccion de usuarios donde tengo la informacion del user y esa misma informacion tenerla anidada dentro de una coleccion de ordenes. Si actualizamos ese usuario tendriamos que actualizar ambas colecciones.
+Si bien es una desventaja actualizar, podemos pensar como una ventaja la no necesidad de relacionan y recuperar informacion de multiples tablas.  
+
+Caracteristicas mas marcadas de NoSQL
+No existe un esquema de datos (en general seguimos un patron).
+No tenemos relacion de datos. Podemos relacionar los documentos, es posible pero en general no existe/hay poca conexion, sino que copiamos la data de uno en la coleccion del otro.
+
+4. Comparacion SQL y NoSQL
+Escala Horizontal vs Vertical
+La escala Horizontal y Vertical son dos enfoques que podemos usar para escalar nuestra base de datos.
+La escala Horizontal es aquella en la cual agregamos más servidores, lo cual podemos hacer de manera "infinita", ya sea comprando servidores, ampliando nuestro espacio en la nube, etc. Conectamos la base de datos y dividimos los datos a través de estos servidores. Esta escala convella a necesitar un proceso que ejecute las query en todos los servidores y los fusione de manera eficiente, lo que lo convierte en un proceso dificil, pero es una buena forma de escalar.
+
+La escala vertical quiere decir que fortalecemos nuestro servidor agregando mas recursos a los procesos que realiza. El problema es que tenemos un limite, no podemos ajustar de manera infinita la capacidad de una CPU, memoria ram, etc.
+
+SQL vs NoSQL
+En general con SQL usamos esquemas de datos, relaciones y la data esta distrubuida entre multiples tablas. La escala horizontal suele ser muy dificil/imposible debido a la manera que funciona SQL. Podemos agreagar mas servidores pero ejecutarlos todos en una nube de datos compartidos es bastante dificil. La escala vertical es posible y mas facil. SQL tiene limitaciones si realizamos cientos o miles de lecturas y escrituras por segundo.
+
+NoSQL no tiene un esquema de datos, tiene pocas relaciones o simplemente no tiene. La inforamcion la trabajamos combinandola/anidandola con otra coleccion. La escala horizontal tanto la vertical es posible, se necesitan conocimientos en el campo pero es una posibilidad factible. Las NoSQL tiene un gran rendimiento a la hora de la lectura y escritura de peticiones.
+
+Puede parecer que las NoSQL son mejor que SQL pero no es así, siempre depende del caso. Depende de las caracteristicas que nos importen.
+
+5. Configuracion de MySQL
+https://dev.mysql.com/doc/mysql-getting-started/en/#mysql-getting-started-installing
+Para las bases SQL utilizaremos el motor MySQL.

@@ -10,3 +10,5 @@ Secciones
 5. Working with Dynamic Content & Adding Templating Engines
 6. The Model View Controller (MVC)
 7. Optional - Enhancing the App
+8. Dynamic Routes & Adavanced Models
+9. SQL Introduction

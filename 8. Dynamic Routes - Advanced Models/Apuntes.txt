@@ -6,3 +6,52 @@ En este modulo veremos como pasar de manera dinamica informacion a través de nu
 Pasar Route Params
 Uso de Query Params
 Mejorar nuestros Models
+
+Useful resources:
+Official Routing Docs: https://expressjs.com/en/guide/routing.html
+
+1. Añadir argumentos al PATH con EJS
+Ester tipo de metodo deberia utilizarse para peticiones GET, ya que por POST tenemos el request body y, en teoria, toda peticion POST tiene datos sensibles que no deberian ser vistos por el usuario.
+La idea es pasar informacion a través del PATH para luego en el controller/router trabajar con los detalles de esa informacion.
+Para pasar informacion de un objeto o lo que fuere en el PATH, tenemos que especificar la ruta donde enviamos (luego de un / por ejemplo), y con codigo EJS para el valor de la variable.
+Ejemplo: "/products/<%=product.id%>"
+
+2. Extraccion de parametros dinamicos EJS
+Para extraer la informacion que hay en el PATH con el metodo visto anteriormente tenemos que indicarle al router que va a venir un parametro por el PATH. Para ello indicamos la ruta y con :NOMBRE le decimos que viene una variable,
+Ejemplo: router.get("/products/:productId", CONTROLLER);
+
+Si tenemos un segmento dinamico como el del ejemplo tiene que ir al FINAL del archivo o de las N rutas con el mismo nombre, ya que las rutas mas especificas no se van a ejecutar y siempre se va a ejecutar la dinamica.
+
+Desde el Controller podemos acceder a cualquiera de los parametros especificado que hayamos con el :NOMBRE con la nomeclatura req.params.NOMBRE.
+Ejemplo: const prodId = req.params.productId;
+
+3. Pasar informacion por POST
+https://stackoverflow.com/questions/23259168/what-are-express-json-and-express-urlencoded
+Como dijimos anteriormente, POST tiene el request body que es donde deberia pasar toda la informacion, no por la URL (Puede haber casos especificos donde utilicemos la URL para algo en concreto).
+Para pasar algun argumento por POST, como por ejemplo un Id, podriamos utilizar un input hidden para que ese body tenga algo y luego a través de funciones tratar la informacion que trajimos
+Ejemplo: <input type="hidden" name="productId" value="<%=productId%>">
+
+4. Include en un Loop EJS
+Por default en un Loop un archivo include no va a tomar la variable del ciclo por mas que tenga el mismo nombre. Si queremos pasarle esta misma variable al include podemos pasarle un segundo parametro  pasandole un objeto y especificando el nombre de la variable en el scope con el del include.
+Ejemplo: <%-include("../includes/add-to-cart.ejs", {VARIABLE_EN_INCLUDE : VARIABLE_EN_EL_LOPP})%>
+
+5. Uso de Query Params
+Un Query Parameter puede ser añadido a cualquier URL añadiendo el signo '?' al final del PATH y luego un par key=value. Puedo añadir multiple query paramters separandolos con '&'.
+Este query parameter NO afecta el PATH del ruteo.
+
+Podemos recuperar estos querys en nuestro controller accediendo a la peticion y luego al objeto 'query'. Para acceder a la data simplemente accedemos a la key del query parameter, los valores siempre son string. Si no le pasamos la key se toma como Undefined que en un if check es considerado false. 
+
+6. FileSync
+Si no hay error nos va a mostrar null cuando trate el callback.
+
+7. Resumen del modulo
+
+Dynamic Routing
+Pasar segmentos del path de manera dinamica añadiendo ':' en el router path de Express, podemos tener multiple segmentos.
+El nombre que añadimos luego del ':' es la key con la cual podemos extraer la data con req.params.KEY
+Opcionalmente tenemos parametros Query que tambien puedo pasarlos en la URL del PATH luego del signo '?'. URL/?param=value&b=2) y podemos extraer la data con req.query.MYPARAM.
+
+More Models
+Añadimos un Cart Model que contiene solo metodos estaticos
+Podemos interactuar entre modelos (ej: Eliminar un elemento del carrito si el producto es eliminado)
+Trabajar con archivos para guardar data no es recomendale para grandes cantidades de data.
