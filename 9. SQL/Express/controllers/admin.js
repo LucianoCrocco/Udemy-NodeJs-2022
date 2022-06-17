@@ -5,9 +5,10 @@ exports.getAddProduct = (req, res, next) => {
     res.render("./admin/edit-product",{pageTitle : "Add Product", path : "/admin/add-product", editing : false});
 }
 exports.postAddProduct = (req, res) => {
-    const product = new Product(null, req.body.title, req.body.imgUrl, req.body.price, req.body.description);
-    product.save();
-    res.redirect("/");
+    const product = new Product(null, req.body.title, req.body.imageUrl, req.body.price, req.body.description); 
+    product.save().then(() => {
+        res.redirect("/");
+    }).catch(err => console.log(err));
 }
 
 

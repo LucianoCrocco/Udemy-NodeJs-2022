@@ -7,6 +7,11 @@ A partir de este modulo veremos como trabajar con una base de datos SQL.
 Diferentes tipos de base de datos (SQL vs noSQL)
 Uso de SQL en una Node.js App
 
+Useful resource:
+Learn more about MySQL/ SQL in General: https://www.w3schools.com/sql/
+Learn more about the Node MySQL Package: https://github.com/sidorares/node-mysql2
+
+
 1. Eligiendo una base de datos
 El objetivo de una BdD es guardar informacion y que sea facil, eficiente y rapido de acceder a ella. Por eso utilizamos una BdD en vez de archivos, especialmente si la informacion va creciendo, tambien nos ayuda con cosas como no tener que leer todo el archivo para encontrar un pedazo de inforamcion.
 
@@ -47,6 +52,34 @@ NoSQL no tiene un esquema de datos, tiene pocas relaciones o simplemente no tien
 
 Puede parecer que las NoSQL son mejor que SQL pero no es así, siempre depende del caso. Depende de las caracteristicas que nos importen.
 
-5. Configuracion de MySQL
+5. Configuracion de MySQL y Conexion de la app con SQL
 https://dev.mysql.com/doc/mysql-getting-started/en/#mysql-getting-started-installing
 Para las bases SQL utilizaremos el motor MySQL.
+Para interectuar con una base MySQL desde node tenemos que instalar el paquete "mysql2", este paquete nos permite interactuar con una base de datos y escribir codigo SQL.
+Una vez instalado el paquete lo importamos con el require: const mysql = require("mysql2"); Es recomendable generar la conexion con un archivo js dedicado a esto en la carpeta de helpers/util.
+
+Existen dos maneras de establecer conexion con la base de datos: 
+Una es abriendo la conexion, haciendo la consulta y luego cerrar esa conexion, lo cual nos va a llevar a generar conexiones por cada query que hagamos (que van a ser muchas en este tipo de app). 
+Otra es generando una conection pool, este pool de conexiones va a permitirnos utilizar el objeto referenciado para ejecutar querys, al ser un pool con muchas conexiones nos permite aislarnos del abrir y cerrar la conexion, ya que una vez terminada la consulta esa conexion vuelve a la pool. Tambien nos permite hacer querys simultaneas. Esta pool se termina cuando nuestra aplicacion se cierra. El objeto pool recibe ciertos parametros como un objeto JS para generar la conexion.
+Ejemplo pool:
+const pool = mysql.createPool({
+    host: "localhost",
+    user: "root",
+    database : "node-complete",
+    password : "nodecomplete"
+})
+
+Para exportarla lo hacemos de la siguiente manera: module.exports = pool.promise();
+Se exporta como promesa porque nos asegura que utilizamos promesas para las tareas asincronicas en vez de callbacks.
+
+6. SQL basico y creacion de tablas
+Para ejecutar consultas tenemos que utilizar esa base exportada como promesa y con el comando DB.exectute(SQL) ejecutar la consulta. Luego utilizaremos la sintaxis de promesas para resolver que hacer una vez hayamos obtenido o no la informacion.
+Ejemplo: db.execute("SELECT * FROM products").then().catch();
+
+Desde un Models el enfoque que da el curso es retornar la promesa de la consulta y en un controller utilizar el .then() y .catch().
+Ejemplo: return db.execute("SELECT * FROM products");
+
+Par insertar data en SQL utilizamos la sintaxis de INSERT pero, a la hora de poner values, por cada valor que queramos insertar vamos a pasar signos '?' y como segundo argumento le vamos a dar un array con cada uno de los valores por '?'. De esta manera prevenimos SQL Injection.
+Ejemplo: return db.execute("INSERT INTO products (title, price, imageUrl, description) VALUES (?, ?, ?, ?)", [this.title, this.price, this.imageUrl, this.description]);
+De la misma manera para un SELECT o cualquier codigo que pueda ser victima de inyeccion SQL. 
+Ejemplo: return db.execute("SELECT * FROM products WHERE products.id = ?", [id])

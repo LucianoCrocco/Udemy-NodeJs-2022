@@ -1,4 +1,3 @@
-const { deepStrictEqual } = require("assert");
 const fs = require("fs");
 const path = require("path");
 const pathProject = require("../helpers/path");

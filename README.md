@@ -12,3 +12,5 @@ Secciones
 7. Optional - Enhancing the App
 8. Dynamic Routes & Adavanced Models
 9. SQL Introduction
+10. Understanding Sequelize
+11. Working with NoSQL & Using MongoDB
