@@ -1,0 +1,188 @@
+Working with NoSQL & Using MongoDb
+
+¿Que hay en el modulo?
+Que es MongoDb, porque usarlo, diferencias con SQL, etc
+Uso del MongoDb Driver en nuestra aplicacion de Node.Js
+
+https://www.mongodb.com/docs/manual/
+https://www.mongodb.com/compatibility/json-to-mongodb
+
+Useful resource:
+
+MongoDB Official Docs: https://docs.mongodb.com/manual/core/security-encryption-at-rest/https://docs.mongodb.com/manual/
+SQL vs NoSQL: https://academind.com/learn/web-dev/sql-vs-nosql/
+Learn more about MongoDB: https://academind.com/learn/mongodb
+
+1. ¿Que es MongoDb?
+MongoDb es el nombre de la compañia que desarrollo esta tecnologia y tambien del producto mas famoso que tienen, es decir, el motor MongoDb para guardar datos de manera NoSQL.
+La palabra Mongo viene de "Humongus" proque MongoDb fue creado para un proposito principal, que es guardar y trabajar con muchos datos. Mongo esta diseñado para aplicaciones a gran escala.
+
+¿Como funciona?
+Activamos un servidor de Mongo en el cual podemos tener muchas bases de datos, al igual que en SQL.
+Tenemos nuestra base de datos, supongamos "Shop".
+Luego tenemos "Colecciones", como puede ser usuarios, ordenes, etc.
+Dentro de cada coleccion tenemos documentos (la informacion), esta informacion que se almacena como documentos es "schema less", es decir, no tiene una estructura de datos definida.
+
+Un documento en MongoDb es una especie de Objeto Javascript en formato JSON, por lo que podemos decir que MongoDb utiliza JSON para guardar informacion en colecciones. Para ser más precisos MongoDb utiliza BSON (Binary JSON) pero esto solo significa que en el background transfroma este JSON a binario para luego guardarlo, es un proceso de Mongo que nosotros no vemos ni por el que tenemos que preocuparnos.
+
+Puedo tener un documento embebido en otro documento, otro documento dentro de ese y así. La existencia de este tipo de documentos embebidos hace que las relaciones se manejen de manera difrente a SQL.
+
+MongoDb utiliza BSON, ademas de por su rapidez y eficencia, porque permite guardar algunos tipos de datos especiales. Por ejemplo un ObjectId es uno de estos tipos, es añadido por MongoDb (no existe en JavaScript) y es simplemente un objeto Id que mongo utiliza para crear Id's que no se puedan repetir.
+Para realizar comparaciones el paquete de mongoDb no trae clases para estos objetos especiales en las cuales le podemos pasar un objeto y realizar la comparacion correctamente.
+
+2. Relaciones en NoSQL
+Es muy comun tener diferentes colecciones y que en estas colecciones se repita informacion en los documentos ya que el mismo "objeto" esta guardado en colecciones diferentes. O simplemente tener esa informacion embedida en una unica coleccion.
+Por ejemplo podria tener un usuario en una coleccion, otra coleccion llamada "Order" podria tener ese mismo usuario gurdado con otro tipo de informacion que lo relaciona a esa coleccion.
+Es posible simular el comportamiento de SQL relacionando dos colecciones con ID's y hacer los "JOINS" de informacion manualmente, pero podriamos simplemente tomar esta propuesta de MongoDb para relacionar data.
+
+Por este enfoque que tienen las relaciones en NoSQL hacen este tipo de motores tan eficientes, no tener que consultar multiples tablas sino tener todo en uno.
+
+Opciones para relacionar
+Documentos anidados -> Un documento contiene informacion embedida de informacion de otra coleccion o simplemente no tener que crear esa coleccion y tener todo en una.
+Referencias -> Hay casos en los que puedo tener mucha duplicación de datos y donde necesitaria trabajar con esos datos y, por lo tanto, cambiaría mucho y tendría que actualizarlos manualmente en todos los lugares duplicados, por lo que el uso de documentos embebidos no es una buena idea. En este escenario seria mejor ir por dos colecciones y solo almacenar referencias para luego combinar manualmente la informacion. 
+
+Caracterisitcas de NoSQL
+No tiene un esquema de datos.
+No hay una estructura definida.
+Mayor flexibilidad.
+Menos relacion entre los datos (Puedo relacionar documentos pero no es obligatorio para relaciones ya que puedo anidar)
+
+3. Setear MongoDb
+https://www.mongodb.com/es
+Podemos ir por un entorno de MongoDb local como MySql pero para el curso y para simular un ambiente mas real vamos a utilizar Atlas, que es un servicio gratuito de MongoDb en la nube.
+
+En Node vamos a necesitar descargar el paquete "mongodb" de NPM que es el driver de Mongo.
+Vamos a generar la conexion en un archivo aparte, por ejemplo un database.js dentro de la carpeta helpers, y luego vamos a exportarlo para poder utilizarlo. La configuracion se realiza asignando una variable al paquete, luego en una nueva variable vamos a utilizar el metodo asociado .MongoClient. Con este cliente vamos a conectarnos a nuestra base de Mongo. Este objeto que tiene la clase MongoClient asociada tiene un metodo llamado .connect("STRING") al cual le pasaremos por parametros el string que nos proveyo mongo atlas, configurando los campos que nos inidica el link.
+Este objeto conect es una promesa. Lo envuelvo en una funcion expresada par poder exportarlo y ejecutarlo en el main.js.
+El callback es la funcion que voy a ejecutar si realizo la conexion, por ejemplo levantar la app.
+getDb nos va a dar el objeto para trabajar con la base de datos.
+
+Volvemos a tener un esquema de clases normales con JS donde luego podemos importar un objeto con la conexion a mongo y con los metodos de esa clase realizar acciones. Ya no tenemos el esquema de Sequelize donde este hacia todo por nosotros cuando definiamos un modelo.
+
+Ejemplo:
+database.js:
+const mongodb = require("mongodb");
+const mongoClient = mongodb.MongoClient;
+let _db;
+
+const mongoConnect = (callback) => {
+    mongoClient.connect("mongodb+srv://USER:PASSWORD@udemy-nodejs-cluster.8fshwnq.mongodb.net/?retryWrites=true&w=majority")
+    .then(client => {
+        console.log('Connected!')
+        _db = client.db('shop');
+        callback()
+    })
+    .catch(err => {
+        console.log(err)
+        throw err;
+    })
+}
+const getDb = () => {
+    if(_db) {
+        return _db;
+    }
+    throw 'Not database found';
+}
+
+exports.mongoConnect = mongoConnect;
+exports.getDb = getDb;
+
+app.js:
+const mongoConnect = require("./helpers/database");
+
+mongoConnect(() => {
+    app.listen(3000)
+})
+
+4. Crear una conexion a la base de datos
+A diferencia de SQL nosotros no necesitamos crear las tables de antemano para poder trabajar. Se crearan automaticamente cuando accedamos por primera vez.
+MongoDb detrás de escena va a manejar un pool de conexiones donde se asegurara de proveer suficientes conexiones para multiples simultaneas interacciones.
+
+5. Uso de la conexion a la base de datos
+https://www.mongodb.com/docs/manual/
+https://www.mongodb.com/docs/drivers/node/current/
+https://www.mongodb.com/compatibility/json-to-mongodb
+https://stackoverflow.com/questions/57962411/i-want-to-stop-the-creation-of-object-id-field-in-mongo-db-so-that-when-i-will-i
+Una vez importado el objeto con la base de datos podemos interactuar con el gracias a los multiples comandos que nos provee la guia.
+Para conectarnos a una coleccion utilizamos el objeto de la BdD con el metodo .collection("NOMBRE").METODOS_DEL_MANUAL(OBJETO_JS). Estos metodos nos devuelven una promesa.
+Si la collecion no existe MongoDb se va a encargar de crearla.
+Internamente MongoDb se va a encargar de convertir en JSON el objeto.
+MongoDb asigna un _id on the fly a la operacion insert realizada si el objeto que le pasamos no tiene.
+Ejemplo:
+db.collection('products').insertOne(this)
+.then(result => {
+    console.log(result)
+})
+.catch(err => console.log(err));
+
+6. Entendiendo el MongoDb Compass
+https://www.mongodb.com/es/products/compass
+MongoDb compass es una aplicacion de escritorio que nos da una GUI para conctarnos e interactuar con la BdD.
+
+7. Traer todos en una coleccion
+El metodo .find(OBJETO) va a buscar en la coleccion donde ejecutamos el metodo todas las coincidencias que tengan paridad con los clave:valor que pasamos en el objeto. Si queremos traer todos simplemente pasamos un objeto vacio.
+.find() no devuelve inmediatamente una promesa, sino que devuelve un "cursor". Un cursor es un objeto que nos da MongoDb que nos permite ir por los documentos paso a paso. Esto sucede ya que si tenemos millones de documentos no queremos que nos traiga todos de una, simplemente que nos traiga 1, lo tratamos y pasamos al siguiente.
+Si queremos evitar este comportamiento podemos decirle que nos haga un .toArray() para que nos devuelva un array con todos los documentos. Solo deberiamos hacer algo asi si sabemos que traemos decenas y algunos cientos de documentos, de otra manera deberiamos implementar paginacion.
+Ejemplo:
+static fetchAll(){
+    const db = getDb();
+    return db.collection("products")
+    .find({}).toArray()
+    .then(products => {
+        console.log(products);
+        return products;
+    })  
+    .catch(err => console.log(err));
+}
+
+7- Traer uno en una coleccion.
+https://www.mongodb.com/docs/manual/reference/method/cursor.next/
+La premisa es igual que el traer todos, mismo metodo y filtramos pasandole un objeto con las condiciones. La diferencia mas notoria es que si sabemos que vamos a traer UNO solo podemos utilizar un metodo especial de mongo llamado .next(). Next va a buscar con el cursor la siguiente coincidencia con la clausula del find y si no encuentra ninguno va a devolver el ultimo que encontro.
+Tambien puedo utilizar el findOne() que no me devuelve el cursor sino que inmediatamente me devuelve el elemento.
+Ejemplo:
+static findById(prodId) {
+    const db = getDb(); 
+    return db.collection("products")
+    .find({_id : prodId})
+    .next()
+    .then(product => {
+        console.log(product);
+        return product;
+    })
+    .catch(err => console.log(err));
+}
+
+Existe un problema a la hora de pasarle un Id, mongoDb no puede comprar un ObjectId con un string. Para solucionar esto volvemos a importar mongoDb donde realizamos la consulta y castear el objeto.
+
+Por lo que la solcion al ejemplo anterior seria retocar la linea del find y dejarla de la siguiente manera:
+.find({_id : new mongoDb.ObjectId(prodId)})
+
+8. Update y Delete de un documento de la coleccion
+https://www.mongodb.com/docs/drivers/node/current/usage-examples/updateOne/
+https://www.mongodb.com/docs/drivers/node/current/usage-examples/deleteOne/
+https://stackoverflow.com/questions/4012855/how-to-update-the-id-of-one-mongodb-document
+En la documentación adjunta esta la implementacion de todos los casos.
+En general bastante parecido a un insert. En caso del update el id no se verá afectado, todo lo demas si.
+El delete espera un argumento de comparacion.
+Ejemplos:
+db.collection('products').updateOne({ _id : new mongoDb.ObjectId(this.id)}, {$set : this})
+.then(result => console.log(result))
+.catch(err => console.log(err))
+
+db.collection("porducts").deleteOne({_id : this._id})
+.then(result => console.log(result))
+.catch(err => console.log(err))
+
+9. Resumen del modulo
+
+NoSQL/MongoDB
+Alternativas de bases SQL
+No hay esquemas estrictos, pocas relaciones
+Se pueden generar esquemas y relaciones pero tenemos mas flexibilidad
+Usualmente, la relacion de los datos en embebiendo los documentos
+
+Trabajar con MongoDB
+Utilizacion del Driver oficial de MongoDb
+Comandos como InsertOne(), updateOne() y deleteOne() hacen las operaciones CRUD muy simples
+La documentacion oficial es muy buena para aprender todo tipo de configuraciones/operaciones
+Todas las operaciones se basan en promesas.
