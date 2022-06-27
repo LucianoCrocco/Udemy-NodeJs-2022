@@ -14,3 +14,5 @@ Secciones
 9. SQL Introduction
 10. Understanding Sequelize
 11. Working with NoSQL & Using MongoDB
+12. Working with Mongoose
+13. Sessions & Cookies

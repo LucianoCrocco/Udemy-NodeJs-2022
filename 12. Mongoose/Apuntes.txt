@@ -1,0 +1,242 @@
+Working with Moongose
+
+¿Que hay en el modulo?
+¿Que es Moongose?
+Introduccion y uso de Moongose en nuestra aplicacion de NodeJs
+
+https://mongoosejs.com/docs/
+
+Useful resource:
+Mongoose Official Docs: https://mongoosejs.com/docs/
+
+1. ¿Que es Moongose?
+https://mongoosejs.com/docs/
+Moongose es un ODM (Object Document Mapping), muy similar al ORM Sequelieze. La idea es la misma, no escribir las consultas, modelos, etc. detrás de escena para que el ODM se encargue de ello.
+Moongose es una gran herramienta para perder esa "flexibilidad" que te da MongoDb y poder definir esquemas estrictos, una estructura de datos definida, etc.
+
+Conceptos básicos
+Trabajamos con esquemas y modelos
+Instancias de objetos para trabajar
+Queries de Moongose
+
+2. Conectar nuestro MongoDB server con Moongose
+El paquete de NPM que debemos descarganos es "mongo0se", es un paquete de producción.
+Moongose detrás de escena se encarga de la administración de todas las utilidades de la base de datos, a diferencia del driver de MongoDb que lo teniamos en un archivo aparte para la conexion y la exportacion de la conexion.
+
+Al igual que el ORM de Sequelieze que dependia de mysql2 para funcionar, no necesita el driver de mongoDb. Docs: "First be sure you have MongoDB and Node.js installed."
+
+
+Importamos mongoose en nuestro archivo de entrada (app.js, index.js...) y utilziamos el metodo connect(). Este metodo toma como primer parametro la URI que nos da Mongo y luego manejamos las promesas que nos devuelve este metodo.
+
+Indicamos la base de datos antes del ? de la URI. 
+
+Ejemplo:
+mongoose.connect("mongodb+srv://USER:PASSWORD@udemy-nodejs-cluster.8fshwnq.mongodb.net/?retryWrites=true&w=majority")
+.then(result => {
+    app.listen(3000);
+})
+.catch(err => console.log(err))
+
+Esta conexion que establecimos aqui se guarda como una "variable global", por lo cual cuando importemos mongoose en los archivos que sean necesarios vamos a tener la conexion ya establecida y lo unico que nos va a importar son las operaciones y no la conexion. Ya sean consultas, definir modelos, etc.
+
+3. Creando un esquema de modelos 
+Lo primero para generar un modelo es importar el modulo de mongoose y luego asignarle a una variable la clase Schema. Con esta clase referenciada (o no, podemos no referenciarlo y acceder a traves del mismo objeto importado de mongoose, rara vez se utiliza de esta manera ya que vamos a querer exportar el esquema) vamos a crear un esquema del modelo que definamos, esta clase Schema recibe un objeto JS por parentesis de como deberia ser este modelo, definimos los tipos, atributos, etc. Como hicimos con Sequelieze.
+
+Si dijimos que MongoDB no require/tiene esquemas definidos, ¿por que ahora comenzamos creando un esquema?. Bueno, la idea simplemente es que, si bien tenemos la flexibilidad de no estar retringidos a un esquema especifico, a menudo tendremos cierta estructura en los datos con los que trabajmos y, por lo tanto, mongoose te permite solo enfocarte en los datos pero primera necesita saber como se ven esos datos.
+Todavia tenemos la flexibilidad de omitir un atributo definido del esquema, agregar no existentes, etc. Salvo que a la hora de configurar el modelo hagamos ciertas configuraciones para requerir si o si un dato.
+
+El _id se agrega automaticamente si no lo definimos como un ObjectId.
+
+Ejemplo:
+const mongoose = require("mongoose"); 
+const Schema = mongoose.Schema;
+
+const productSchema = new Schema({
+    title : {
+        type: String,
+        require : true
+    },
+    price : {
+        type : Number,
+        require : true
+    },
+    description : {
+        type : String,
+        require : true
+    },
+    imageUrl : {
+        type : String,
+        require : true
+    },
+})
+
+Una vez creado el esquema vamos a generar el modelo. El modelo se va a definir con el metodo de mongoose llamado .model("NOMBRE_DEL_MODELO, ESQUEMA"). Generalmente el modelo se exporta para trabajar con el asi que esta funcion se realiza en el mismo module.exports, aunque puedo asignarlo a una variablen y luego exportarla.
+
+Ejemplo:
+module.exports = mongoose.model("Product", productSchema);
+
+4. Guardando informacion de un objeto
+https://mongoosejs.com/docs/api.html#model_Model-save
+Cuando queramos utilizar mongoose para operaciones como guardar un objeto coincidente con un esquema definido, simplemente importamos el modelo que hayamos exportado.
+Creamos un objeto con este modelo con el operador new() y le pasamos un objeto con clave : valor dentro. Las claves deben ser coincidentes con el modelo definido.
+
+Ejemplo:
+const product = new Product ({title: req.body.title, price : req.body.price, imageUrl : req.body.imageUrl, description : req.body.description})
+
+Este objeto creado va a tener un metodo asociado llamado .save(), con el cual podremos guardar el objeto en la base de Mongo. El metodo, como todos, esta basado en promesas.
+
+Ejemplo:
+product.save()
+.then(result => {
+    console.log("Created product");
+    res.redirect("/admin/products");
+})
+.catch(err => console.log(err));
+
+A la hora de crear el nombre de la coleccion toma el nombre definido del modelo, lo pluraliza y lo hace minusculas.
+
+
+5. Traer toda la coleccion
+Tenemos que importar el modelo que queremos utilizar.
+Utiliza una sintaxis muy parecida al driver de mongoDb. find() nos va a traer TODOS los objetos, y para invocar el cursor simplemente añadimos un .cursor(). Con .cursor() tenemos otros metodos como next() para traer al siguiente y así.
+
+Ejemplo:
+const Product = require("../models/product");
+Product.find()
+.then(products => {
+    res.render("./shop/product-list", {prods : products, pageTitle : "All Products", path : "/products"});
+})
+.catch(err => console.log(err));
+
+6. Traer un documento
+Mongoose tiene el metodo findById() donde por parametros podemos pasarle un objeto y este será convertido por mongoose a un ObjectId.
+
+Ejemplo:
+Product.findById(prodId)
+.then(product => {
+    res.render("./shop/product-detail", {product : product, pageTitle : product.title, path : "/products"});
+})
+.catch(err => console.log(err));
+
+7. Actualizar un documento
+Buscamos el objeto con le findById. En el bloque .then() vamos a recibir un objeto de tipo moongose, por lo que tendremos acceso a todos los metodos para que afecten a ESE objeto que trajimos. Por lo que podemos ejecutar un .save() y que se guarde en la referencia de ese objeto que trajimos.
+Tambien podriamos realizar un updateOne() y la funcionalidad seria la misma que MongoDb con ciertos cambios.
+
+Ejemplo .save():
+Product.findById(prodId)
+.then(product => {
+    product.title = updatedTitle;
+    product.price = updatedPrice;
+    product.imageUrl = updatedImageUrl;
+    product.description = updatedDescription;
+    return product.save()
+})
+.then(result => {
+    console.log("Product updated"); 
+    res.redirect("/admin/products");
+})
+.catch(err => console.log(err));
+
+Ejemplo updateOne:
+Product.updateOne({_id : prodId}, {title : updatedTitle, price : updatedPrice, imageUrl : updatedImageUrl, description : updatedDescription})
+.then(result => {
+    console.log("Product updated"); 
+    res.redirect("/admin/products");
+})
+.catch(err => console.log(err));
+
+8. Eliminar un documento
+Le pasamos el id a la funcion findByIdAndRemove() y esta se encagara de borrar el documento en la coleccion.
+
+Ejemplo:
+const prodId = req.body.productId;
+Product.findByIdAndRemove(prodId)
+.then(result => {
+    console.log("Destroy product")
+    res.redirect("/admin/products")
+})
+.catch(err => console.log(err))
+
+9. Ejemplo para crear un modelo embebido
+const userSchema = new mongoose.Schema({
+    name : {
+        type : String,
+        required : true
+    },
+    email : {
+        type : String,
+        required : true
+    },
+    cart : {
+        items : {
+            type : [
+                {
+                    productId : {}, 
+                    quantity : 
+                    {
+                        type : Number, 
+                        required : true
+                    }
+                }
+            ]
+        }
+    }
+})
+
+10. Uso de relaciones en Mongoose
+Existe la configuracion 'ref : "String"', a la cual le vamos a pasar el nombre del modelo con el cual queremos referenciar esa clase. El nombre del modelo es aquel que definimos cuando hicimos el .model("NAME", SCHEMA).
+Podemos asignar un tipo especial con Schema.Types.ObjectId, para que su tipo sea el ID de ese objeto del modelo que relacionamos. Si no asignamos un ref puede ser un ObjectId de cualquier modelo u objeto que le pasemos.
+
+Ejemplo:
+userId : {
+    type : Schema.Types.ObjectId,
+    ref : 'User',
+    required : true
+}
+
+productId : {
+    type : mongoose.Schema.Types.ObjectId,
+    ref : 'Product',
+    required : true
+}
+
+11. Metodo importante de Moongose
+https://mongoosejs.com/docs/4.x/docs/populate.html
+Si tuvieramos una relacion donde dentro de un objeto tenemos el id de otro modelo y queremos traerlo normalmente hariamos las queries de find() cone se objeto.
+Moongose tiene un metodo especial llamado populate("DATO DE LA REFERENCIA", "Que campos del modelo traer"). Sabe a donde buscar la referencia porque cuando definimos el esquema utilizamos la propiedad ref.
+
+Ejemplo:
+Product.find()
+.populate("userId", "name email -_id")
+.then(products => {
+    res.render("./admin/products", {prods : products, pageTitle : "Admin Products", path : "/admin/products"});
+})
+.catch(err => console.log(err));
+
+Me traigo todos los productos y ese campo userId del esquema de productos se rellena con toda la informacion del campo referenciado. Puedo filtrar y agregar mas opciones a la busqueda.
+
+El segundo argumento puedo ejecutarlo con una funcion especial llamada .select() que cumple la misma funcion y tiene la misma sintaxis.
+
+Ejemplo:
+Product.find()
+.select("title description -_id")
+.then(products => {
+    console.log(products)
+    res.render("./admin/products", {prods : products, pageTitle : "Admin Products", path : "/admin/products"});
+})
+.catch(err => console.log(err));
+
+Mongoose nos da un _doc que nos parmite acceder a la metadata de un objeto que hayamos traido. Y si tenemose el ID de un objeto relacionado ._doc nos permite ingresar a los atributos y de ese archivo. Esta metadata no es accesible con un console.log.
+
+Ejemplo:
+const products = user.cart.items.map(i => {
+    return {quantity : i.quantity, product : {...i.productId._doc}}
+});
+
+12. Añadir metodos a un modelo en Mongoose.
+Moongose nos permite añadir metodos utilizando la sintaxis SCHEMA.methods.NOMBRE_METODO = FUNCION.
+
+Ejemplo:
+userSchema.methods.addToCart = function () {
+    CODIGO
+}

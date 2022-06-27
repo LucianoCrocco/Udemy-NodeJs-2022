@@ -1,5 +1,5 @@
 {
-  "name": "12.-moongose",
+  "name": "12-mongoose",
   "version": "1.0.0",
   "description": "Seccion 12 del curso de NodeJs",
   "main": "app.js",
@@ -9,12 +9,13 @@
   },
   "author": "Luciano Crocco",
   "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.18"
+  },
   "dependencies": {
     "ejs": "^3.1.8",
     "express": "^4.18.1",
-    "mongodb": "^4.7.0"
-  },
-  "devDependencies": {
-    "nodemon": "^2.0.16"
+    "mongodb": "^4.7.0",
+    "mongoose": "^6.4.0"
   }
 }
