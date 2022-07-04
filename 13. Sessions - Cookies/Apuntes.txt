@@ -1,0 +1,131 @@
+13. Sessions & Cookies
+
+¿Que hay en el modulo?
+Mecanismos para guardar informacion en la memoria o en el navegador del cliente.
+¿Que son las cookies?
+¿Que son las sesiones?
+Como utilizar ambas
+
+Useful resource:
+
+More on Sessions: https://www.quora.com/What-is-a-session-in-a-Web-Application
+More on Cookies: https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies
+Express-session Official Docs: https://github.com/expressjs/session
+
+
+1. ¿Que es una cookie?
+Una cookie se utiliza a menudo para identificar un usuario.
+Una cookie es un pequeño archivo que el servidor guarda en el cliente.
+Cada vez que el mismo equipo solicita una página con un navegador, se enviará la cookie también.
+Por ejemplo un usuario hace un login, ese login es una peticion HTTP. Como respuesta el servidor envia la vista y una cookie que guarda la informacion de la sesion. Esa cookie luego puede ser incluida para hacer peticiones y hacer saber al servidor que esta logeado.
+
+2. Seteando una Cookie
+https://www.geeksforgeeks.org/node-js-response-setheader-method/
+https://stackoverflow.com/questions/44816519/how-to-get-cookie-value-in-expressjs
+Una peticion muere cuando se envia una respuesta. Anteriormente utilizamos un middleware general antes del especifico por cada ruta para poder almacenar informacion de un usuario como parte de todas las peticiones que lleguen, el "dummy user" lo utilizamos como un usuario ficticio para ver relaciones y otros temas. En un ambiente real este tipo de middleware no se crea ya que ese usuario que carguemos estará disponible para todas las peticiones simultaneas que se hagan.
+
+Con las cookies podemos almacenar informacion en el navegador del cliente, esa informacion sera customizada dependiendo del usuario y no afecta a otros. Esta informacion puede ser enviada con la peticion y el servidor, dependiendo de la informacion que le llegue, realizar cierta respuesta.
+La cookie expira por default cuando cerremos el navegador.
+
+Para setear una cookie en Express tenemos que setear un header con .setHeader() y dentro almacenar un nombre para ese header y un key=value como segundo argumento.
+El nombre del setHeader será Set-Cookie ya que esta reservado para generar esa cookie. La key es el nombre de la cookie y el value el valor que almacena
+
+Ejemplo:
+res.setHeader('Set-Cookie', 'loggedIn = true'); -> Setear una cookie
+const isLoggedIn = req.get("Cookie").split('=')[1] -> Acceder y obtener el valor
+
+Por default el navegador envia al servidor la cookie que generamos con todas las peticiones que hagamos.
+
+Puedo instalar el paquete cookie-parser y añadirlo como middleware para parsear las cookies.
+
+3. El problema con las Cookies
+Las cookies tienen un gran problema. Desde el navegador podemos cambiar informacion lo que puede producir fallas en la seguridad de nuestra aplicacion web.
+La idea seria poder guardar informacion en el cliente como por ejemplo tracker de usuarios, publicidad, etc. Que si es manipulada no afecte los permisos ni ninguna informacion crucial de la app.
+
+Como dijimos anteriormente para trackear usuarios es un instrumento popular.
+¿Por que es asi?: Las cookies no solo tienen que relacionarse con mi pagina, una cookie tambien puede ser enviada a otra página y ese es un instrumento comun. 
+https://es.ryte.com/wiki/P%C3%ADxel_de_Seguimiento
+https://www.youtube.com/watch?v=rrAjCHm7qRU
+https://www.youtube.com/watch?v=QWw7Wd2gUJk
+
+4. Configuracion de una cookie
+https://developer.mozilla.org/es/docs/Web/HTTP/Headers/Set-Cookie
+El seteo a HttpOnly hace que la cookie no pueda ser accedida desde JavaScript. Preveniendonos de ataques Cross Site Scripting Attacks.
+
+A menudo no configuraremos nuestra cookie y preferentemente dejaremos que un paquete lo haga por nosotros. 
+
+5. ¿Que es una sesión?
+Las son una forma de guardar información de un usuario particular, que puede ser usada en distintas páginas del sitio Web.
+La información NO es almacenada en el cliente.
+Dado que HTTP NO mantiene estado entre páginas, la utilización de variables de sesión permite mantener información acerca de un solo usuario, y están disponibles para todas las páginas del sitio Web.
+Por defecto, las variables de sesión duran hasta que el usuario cierra el navegador
+
+El cliente necesita decirle al servidor a que sesion pertenece. Par ello podemos asociar una cookie donde almacenamos el ID de la sesion. Este metodo logra una asociacion cliente-servidor. La ID será hasheada con un algoritmo para que solo el algoritmo del servidor pueda desencriptarla y modificarla.
+
+6. Implementacion de las sesiones
+https://www.npmjs.com/package/express-session
+Para express vamos a utilizar el paquete express-session. La sesion la queremos iniciar en un Middleware antes de todas las rutas para utilizarla en cada peticion entrante.
+
+Para configurar una sesion la importamos en nuestro archivo de entrada del servidor. Antes de las rutas generamos un middleware y en ese middleware ejecutamos ese modulo importando, dentro le pasamos un objeto JS con la configuracion que va a tener
+
+Ejemplo:
+app.use(session({secret : 'my secret', resave : false, saveUninitialized : false}));
+secret: Se usará para firmar el hash que almacena en secreto nuestra ID en la cookie.
+resave: La sesión no se guardará en cada solicitud que realice salvo que haya un cambio.
+saveUninitialized: Garantizará que no se guarde ninguna sesión para una peticion donde no es necesario guardarla porque no se cambió nada al respecto.
+Tambien podemos configurar la cookie de la sesion con cookie : {}. 
+
+
+Este middleware va a generar una cookie con un valor hasheado (la key secret es el hasheo). Por default es una session cookie, por lo que caducará una vez se cierre el navegador. Esta cookie identificará al usuario con el servidor.
+Esta sesion nos va a permitir compartir informacion a traves de las distintas peticiones para ese unico usuario.
+Este mecanismo es el nucleo de autenticacion de usuario en una web MVC donde renderizamos las vistas. Para una REST API hay otras maneras.
+
+El middleware va a guardar en la peticion un objeto .session y le podemos agregar keys:values.
+
+Ejemplo:
+req.session.isLoggedIn = true;
+
+7. Uso de MongoDB para guardar sesiones
+https://www.npmjs.com/package/connect-mongodb-session
+Vimos como utilizar sesiones pero estas sesiones se guardan en memoria, la cual es muy acotada y en un servidor de produccion puede provocar un overflow de memoria.
+Para guardar esta informacion de sesiones en MongoDB vamos a utilizar el paquete "connect-mongodb-session".
+Para utilizar este modulo tenemos que importarlo y pasarle como parametro el modulo de la sesion. Esta operacion nos va a devolver un constructor. A ese constructor le pasamos opciones. La URI del servidor, la coleccion donde se va guardar, la expiracion, etc.
+Para que la session se guarde en la base de mongo y no en la memoria tenemos que configurar nuestra sesion pasandole el objeto donde asignamos nuestra storeSession a la key "store".
+
+Ejemplo:
+const session = require("express-session");
+const mongoDBStoreSession = require("connect-mongodb-session")(session);
+const store = mongoDBStoreSession({uri : MONGODB_URI, collection : "sessions"});
+app.use(session({secret : 'my secret', resave : false, saveUninitialized : false, store : store}))
+
+8. Pequeño resumen de Sesiones y Cookies
+Cookie -> Client-side
+Session -> Server-side.
+
+9. Eliminar una sesion
+Puedo eliminar una sesion accediendo a ella a traves de la peticion y luego haciendo un .destroy(CALLBACK). La cookie va a seguir existiendo en el navegador del cliente pero ya no va a existir un ID para matchear con el backend, por lo tanto esa cookie queda "invalidada".
+Recordemos que por default la cookie se elimina una vez cerrado el navegador. En caso de que se vuelva a iniciar sesion se va a sobreescribir si existe.
+
+Ejemplo:
+exports.postLogout = (req, res, next) => {
+    req.session.destroy((err) => {
+        console.log(err);
+        res.redirect("/");
+    });
+}
+
+10. Resumen del modulo
+
+Cookies
+Son utiles para guardar informacion del lado del cliente.
+No se guarda informacion sensible ya que puede ser vista y manipulada.
+Se pueden configurar para que se borren cuando el navegador se cierre (o se cierre la sesion) o cuando llega a un tiempo establecido de expiracion.
+Funcionan genial con las sesiones
+
+Sessions
+Se guardan en el servidor, no en el cliente.
+Funcionan genial para guardar informacion sensible que debe persistir a traves de peticiones
+Podemos guardar lo que sea en sesiones
+Usualmente se utiliza para guardar data/autenticacion de usuarios.
+Se identifica al cliente con una Cookie con informacion hasheada
+Existen distintos mecanismos para guardar la informacion en el servidor.

@@ -1,0 +1,7 @@
+13. Adding Authentication
+
+¿Que hay en el modulo?
+Mecanismos para guardar informacion en la memoria o en el navegador del cliente.
+¿Que son las cookies?
+¿Que son las sesiones?
+Como utilizar ambas
