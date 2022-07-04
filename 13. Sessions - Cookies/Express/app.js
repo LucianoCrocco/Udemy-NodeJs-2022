@@ -20,7 +20,7 @@ const User = require("./models/user");
 const rootDir = require("./helpers/path"); //rootDir instead __dirname
 
 //constants
-const MONGODB_URI = "mongodb+srv://LucianoCrocco:guL5uFVZOKG17kq3@udemy-nodejs-cluster.8fshwnq.mongodb.net/shop?retryWrites=true&w=majority";
+const MONGODB_URI = "";
 
 //App file
 const app = express();
