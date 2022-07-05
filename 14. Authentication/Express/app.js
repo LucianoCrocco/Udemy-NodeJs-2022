@@ -1,9 +1,11 @@
-//Core Modules
+//Modules
 const express = require("express");
 const path = require("path");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const mongoDBStoreSession = require("connect-mongodb-session")(session);
+const csrf = require("csurf");
+const flash = require("connect-flash");
 
 //Routes
 const adminRoutes = require("./routes/admin");
@@ -22,9 +24,10 @@ const rootDir = require("./helpers/path"); //rootDir instead __dirname
 //constants
 const MONGODB_URI = "";
 
-//App file
+//Inicialization
 const app = express();
 const store = mongoDBStoreSession({uri : MONGODB_URI, collection : "sessions"});
+const csrfProtecction = csrf();
 
 //Template engines
 app.set("view engine", "ejs");
@@ -33,11 +36,19 @@ app.set("views", "./views");
 //Middlwares  
 app.use(express.urlencoded({"extended" : true})); //-> JSON format for files and forms 
 app.use(express.static(path.join(rootDir, "public"))); // -> Usage of static
-app.use(session({secret : 'my secret', resave : false, saveUninitialized : false, store : store}))//-> Session
+app.use(session({secret : 'my secret', resave : false, saveUninitialized : false, store : store}));//-> Session
+app.use(csrfProtecction);
+app.use(flash());
+
+app.use((req, res, next) => {
+    res.locals.isAuthenticated = req.session.isLoggedIn;
+    res.locals.csrfToken = req.csrfToken();
+    next();
+})
 
 //Temporary Middleware for User
 app.use((req, res, next) => {
-    if(!req.session.user._id){
+    if(!req.session.user){
         return next();
     }
     User.findById(req.session.user._id)
@@ -59,29 +70,6 @@ app.use(errorController.get404);
 //Connection to Db and start server
 mongoose.connect(MONGODB_URI)
 .then(connection => {
-    /*const user = new User({
-        name : "Luciano",
-        email : "luciano@mail.com",
-        cart : {
-            items : []
-        }
-    })
-    user.save()
-    O
-    User.findOne()
-    .then(user => {
-        if(!user){
-            const user = new User({
-                name : "Luciano",
-                email : "luciano@mail.com",
-                cart : {
-                    items : []
-                }
-            })
-            user.save()
-        }
-    })
-    */
     app.listen(3000);
 })
 .catch(err => console.log(err))

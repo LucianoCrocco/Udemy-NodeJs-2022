@@ -62,6 +62,8 @@ Por defecto, las variables de sesión duran hasta que el usuario cierra el naveg
 
 El cliente necesita decirle al servidor a que sesion pertenece. Par ello podemos asociar una cookie donde almacenamos el ID de la sesion. Este metodo logra una asociacion cliente-servidor. La ID será hasheada con un algoritmo para que solo el algoritmo del servidor pueda desencriptarla y modificarla.
 
+Se va a generar una sesion por cada cliente entrante en nuestra app. Si no se utiliza ni se altera la misma esta no se guarda en la base de datos (si asi lo configuramos) ya que no se utiliza (por como la configuramos), por lo que la session queda en memoria a la espera de ser utilizada. Mas adelante en el curso guardaremos una cookie CSRF en el cliente y en el servidor el valor hasheado, tambien utilizaremos el paquete "connect-flash" que permite guardar valores temporales en la sesion, por lo que por cada cliente (registrado, logueado, visitanto, etc) que genere una peticion se va a generar una sesion.
+
 6. Implementacion de las sesiones
 https://www.npmjs.com/package/express-session
 Para express vamos a utilizar el paquete express-session. La sesion la queremos iniciar en un Middleware antes de todas las rutas para utilizarla en cada peticion entrante.
