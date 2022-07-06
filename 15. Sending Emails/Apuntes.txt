@@ -1,1 +1,75 @@
 15. Sending Emails
+
+Useful resources:
+Nodemailer Official Docs: https://nodemailer.com/about/
+SendGrid Official Docs: https://sendgrid.com/docs/
+
+1. ¿Como funciona el envio de mails?
+Con NodeJs no podemos, de manera trivial, crear un un servidor de emails. Manejar mails es totalmente diferente a manejar peticiones entrantes y respuestas. Es muy probable que jamas implementemos nuestro propio servidor para el envio de emails, ya que es un tarea muy compleja, el hecho de enviar cientos, miles de mails al mismo tiempo, manejar la seguridad, etc.
+Por ello vamos a utilizar un paquete de terceros para un servidor de emails, de esta manera veremos como interactuar con este tipo de servicios.
+
+2. Uso de MailTrap y NodeMailer
+https://morioh.com/p/56a03d5c93c5
+https://www.npmjs.com/package/@sendgrid/mail
+En el curso se utiliza SendGrid y un paquete para nodemailer de esta pagina pero hubo cambios en los paquetes que se utilizan y se recomienda en los comentarios esta version.
+Mailtrap es un tester para enviar mails y quedan atrapados en la web de ellos, no se envia a una casilla.
+Nodemailer es un paquete que hace el enviar emails desde NodeJs muy facil.
+Otra alternativa es utilizar el paquete @sendgrid/mail para enviar a mails verdaderos
+
+3. Uso de NodeMailer para enviar un Email
+Importamos donde lo vaya a utilizar este paquete. Luego vamos a inicializar una constante transporter que asignaremos un metodo de nodemailer, un transporter es un setup que le dice a nodemailer como nuestros emails van a ser entregados. 
+Utilizamos uno de los metodos de nodemailer llamado "createTransport" y le pasamos por parametros con objeto JS con la configuracion SMTP de la pagina de mailtrap.
+
+Ejemplo:
+const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport(({
+    host: "smtp.mailtrap.io",
+    port: 2525,
+    auth: {
+        user: "USUARIO",
+        pass: "CONTRASEÑA"
+    }
+}))
+
+Una vez configurado en la varible donde hayamos utilizado el metodo "createTransport" vamos a tener acceso a metodos que nos permiten enviar emails. SendEmail() recibe un objeto JS con la configuracion y devuelve una promesa.
+
+Ejemplo en un SignUp:
+.then(result => {
+    res.redirect("/login");
+    return transporter.sendMail({
+        to : email,
+        from : "shop@node-complete.com",
+        subject : 'Signup succeded',
+        html: '<h1>You succesfully sign up</h1>'
+    })
+})
+.catch(err => {
+    console.log(err);
+});
+
+4. ALTERNATIVA USADA - Uso de @sendgrid/mail
+Importamos el modulo @sendgrid/mail en una varible, es esa variable ejecutamos el metodo setApiKey() donde le pasamos por parametros la API de sendGrid y luego utilizamos en la misma variable el metodo -..send({}) donde recibe por parametros un objeto JS con una configuracion muy similar al mailtrap
+
+Ejemplo:
+const sendGrid = require("@sendgrid/mail");
+
+sendGrid.setApiKey("API_KEY_SENDGRID");
+
+Dentro de un controlador que maneja la creacion de un mail
+.then(result => {
+    res.redirect("/login");
+    return sendGrid.send({
+        to : email,
+        from : "luciano-app-node@proton.me",
+        subject : 'Signup succeded',
+        html: '<h1>You succesfully sign up</h1>'
+    })
+})
+.catch(err => {
+    console.log(err);
+});
+
+5. Potenciales limitaciones para aplicaciones de larga escala
+En los ejemplos no esperamos que finalice de enviar el mail y se redirecciona antes de terminar ya que puede tardar mucho si tenemos que enviar muchos mails. Tambien podriamos generar un approach en la cual enviamos los mails cada X minutos u horas.
+La idea es que el usuario continue utilizando la app sin el mail.

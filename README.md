@@ -17,3 +17,5 @@ Secciones
 12. Working with Mongoose
 13. Sessions & Cookies
 14. Adding Authentication
+15. Sending Emails
+16. Advanced Authentication
