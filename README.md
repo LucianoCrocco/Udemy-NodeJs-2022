@@ -19,3 +19,5 @@ Secciones
 14. Adding Authentication
 15. Sending Emails
 16. Advanced Authentication
+17. Understanding Validation
+18. Error Handling

@@ -42,20 +42,31 @@ exports.postEditProduct = (req, res, next) => {
     const updatedImageUrl = req.body.imageUrl;
     const updatedPrice = req.body.price;
     const updatedDescription = req.body.description;
-    Product.updateOne({_id : prodId}, {title : updatedTitle, price : updatedPrice, imageUrl : updatedImageUrl, description : updatedDescription})
-    .then(result => {
-        console.log("Product updated"); 
-        res.redirect("/admin/products");
+    Product.findById({_id : prodId})
+    .then(product => {
+        if(product.userId.toString() !== req.user._id.toString()){
+            return res.redirect("/");
+        }
+
+        product.title = updatedTitle; 
+        product.price = updatedPrice;
+        product.imageUrl = updatedImageUrl;
+        product.description = updatedDescription;
+
+        return product.save()
+        .then(result => {
+            console.log("Product updated"); 
+            res.redirect("/admin/products");
+        })
     })
     .catch(err => console.log(err));
 }
 
 
 exports.getProducts = (req, res) => {
-    Product.find()
-    //.populate("userId", "name email -_id")
+    Product.find({userId : req.user._id})
     .then(products => {
-        console.log(products)
+        // console.log(products)
         res.render("./admin/products", {
             prods : products, pageTitle : "Admin Products", path : "/admin/products"
         });
@@ -66,11 +77,10 @@ exports.getProducts = (req, res) => {
 
 exports.postDeleteProduct = (req, res) => {
     const prodId = req.body.productId;
-    Product.findByIdAndRemove(prodId)
+    Product.deleteOne({_id : prodId, userId : req.user._id})
     .then(result => {
         console.log("Destroy product")
         res.redirect("/admin/products")
     })
     .catch(err => console.log(err))
-
 }

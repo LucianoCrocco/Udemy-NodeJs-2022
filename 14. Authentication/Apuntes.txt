@@ -120,6 +120,7 @@ Un ejemplo es una fake-page que se ve como la nuestra pero que no es la nuestra,
 https://www.npmjs.com/package/csurf
 El paquete para añadir prevencion a los ataques CSRF es "csurf", este es un paquete de Node-Express que nos permite generar un CSRF token. Un token que podemos embeber en nuestras views/formularios para cada peticion que cambia el estado de nuestro usuario, que cambie informacion sensible y que queramos proteger. 
 En caso de un ataque CRSF a la fake-page le faltaria este token, que no podrian adivinar porque es un string random hasheado y solo el backend puede saber si es valido o no. Tampoco pueden robarlo, porque un nuevo token es generado por cada pagina que renderizamos.
+Por default el token se guarda en la session. El token de la peticion es el que sera comparado con el de la session, ejecutando req.csrfToken() vamos a poder generar un token en la peticion y compararlo con el que se guardo en la session.
 
 Para utilizarlo debemos importar el modulo en nuestro app.js, asignarlo a una variable y dentro puedo configurarlo pasandole un objeto JavaScript. Luego, despues del middleware que inicializa sesiones, vamos a generar un middleware con esa constante a la cual le asiganmos el paquete de csurf.
 
@@ -153,6 +154,10 @@ app.use((req, res, next) => {
     res.locals.csrfToken = req.csrfToken();
     next();
 })
+
+¿Por que se guarda en la respuesta?
+res.locals is only available to the view while it's being rendered (i.e. the response). There's no way to access it otherwise so they can't be misused.
+http://expressjs.com/en/api.html#res.locals
 
 
 10. Generar variables temporales en las sesiones.

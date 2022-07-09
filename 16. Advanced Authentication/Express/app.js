@@ -47,7 +47,7 @@ app.use((req, res, next) => {
     next();
 })
 
-//Temporary Middleware for User
+//Middleware for User
 app.use((req, res, next) => {
     if(!req.session.user){
         return next();

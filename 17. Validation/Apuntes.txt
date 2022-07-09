@@ -1,0 +1,140 @@
+17. Understanding Validation
+
+¿Que hay en este modulo?
+¿Por qué validar es importante?
+¿Que quiero decir con validar el input de un usuario y por que querríamos hacerlo?
+Como podemos validar.
+
+Useful resources:
+https://www.npmjs.com/package/express-validator
+https://express-validator.github.io/docs/
+https://express-validator.github.io/docs/check-api.html
+https://github.com/express-validator/express-validator/issues/449
+https://github.com/validatorjs/validator.js 
+
+
+1. ¿Por que deberiamos usar validaciones?
+Si tenemos una web app normalmente vamos a tener muchos formularios con los cuales los usuarios pueden interactuar. Al final, cuando se envian estos formularios llegan a nuestro backend con los datos que hayan rellenado en el formulario. 
+En el backend interactuamos con estos datos y tal vez los utilizamos para escribir archivos, guardar en una base de datos, etc. Basicamente tomamos esta informacion y la guardamos. Esta es la parte que puede ser peligrosa/problematica, no estamos evitando que el usuario ingrese algo incorrecto (El front-end se puede cambiar, por lo que validar en el backend es necesario).
+En este modulo agregaremos validaciones despues del envio pero antes de interactuar con los datos.
+
+2. ¿Como validamos el input de un usuario?
+Existen varias maneras, una de ellas es validar en el lado del cliente con JavaScript, antes de que se envie cualquier peticion escuchar los eventos, validar, y luego enviar la informacion si es correcta, si no lo es, simplemente desplegar un error ya que JS nos permite trabajar con el DOM en tiempo de ejecucion. 
+Esta manera, segun el instructor, es totalmente opcional. Si bien mejora la experiencia del usuario, al estar del lado del cliente este puede ver el codigo, por lo que puede cambiarlo, deshabilitarlo, etc. Esto no es una proteccion que nos protega contra el envio incorrecto de datos al servidor, esta ahi para mejorar la experiencia de usuario.
+
+La siguiente opcion es validar en el servidor, de esta manera nos vamos a enfocar en este modulo. Lo hacemos de esta manera porque el usuario no puede ver o cambiar este codigo, el usuario no puede deshabilitar nada porque todo ocurre del lado del servidor. Esta es la parte crucial donde realmente tenemos que filtrar los valores no válidos, por lo que es imprescindible.
+Entonces podemos decir que esta instancia nos asegura que trabajamos con datos validos en nuestra node app.
+
+Existen validadores built-in en los motores de base de datos que se pueden activar, mongoDb esta entre ellos. Son opcionales y suelen ser un ultimo recurso, si tenemos buena validacion server-side no deberia haber un escenario donde sean necesarios estos validadores de las BdD.
+
+Siempre de debe tener el enfoque de la validacion en el servidor, ya sea con los motores que proveen las bases de datos o con nuestro codigo server-side (siempre se deberia validar del lado del servidor).
+
+Si falla del lado del servidor deberiamos lograr no recargar la pagina, que los datos que el usuario ingreso queden cargados y mostrar un error personalizado avisando por que fallo. De lo contrario sería una pésima experiencia de usuario.
+
+3. Setup y validacion basica.
+https://www.npmjs.com/package/express-validator
+https://express-validator.github.io/docs/
+https://express-validator.github.io/docs/check-api.html
+https://github.com/express-validator/express-validator/issues/449
+https://github.com/validatorjs/validator.js
+
+Leer la documentacion para ver todos los tipos de validadores, solo validar body, etc.
+
+Vamos a validar los formularios que tenemos en nuestra app, como signup, login, etc. Para validar utilizaremos un paquete de terceros llamado "express-validator".
+
+Por lo general vamos a querer validar en las rutas que no sean GET, cada vez que el usuario envia data (generalmente POST, PUT, etc. Es raro encontrar un GET con informacion que se encia del usuario).
+El paquete instalado viene con funciones, funciones las cuales vamos a poder ejecutar agregandolas en middlewares de rutas ya que una vez que se ejecutan devuelve un middleware. Si encontro algun error lo va a guardar en el objeto de la peticion.
+Luego, en el controlador/middleware siguiente, podemos chequear si el middleware anterior encontro errores o no a la hora de validar informacion, para ello tenemos la funcion "validationResult" al cual le pasamos el objeto de la peticion donde el middleware/s de validaciones guardo, o no, errores.
+
+Si hay un error y lo recuperamos este va a ser un objeto con informacion dentro, donde se produjo, el valor, mensaje, etc.
+Result {
+  formatter: [Function: formatter],
+  errors: [
+    {
+      value: 'asdasd',
+      msg: 'Please enter a valid email address',
+      param: 'email',
+      location: 'body'
+    }
+    ]
+}
+Este error cuando lo recupero puedo convertirlo a un array para que solo me de los errores y no todo el resultado.
+
+
+Ejemplo:
+Agrego el middlware de validacion en la ruta
+const { check } = require("express-validator");
+router.post("/signup", check("email").isEmail(), authController.postSignup);
+
+En el controlador chequeo lo que haya devuelto el middleware de validacion, antes traigo la funcion que puede recuperar ese objeto almacenado en la peticion
+const {validationResult} = require("express-validator");
+
+exports.postSignup = (req, res, next) => {
+    const email = req.body.email;
+    const password = req.body.password;
+    const errors = validationResult(req);
+    if(!errors.isEmpty()) {
+        return res.status(422).render('./auth/signup', {
+            path: '/signup',
+            pageTitle: 'Signup',
+            errorMessage: errors.array()[0].msg -> Convierto el array en una funcion y recupero el primer elemento en el atributo del mensaje
+        });
+    }
+    Resto de la funcion
+}
+
+Puedo configurar agregar el metodo "withMessage()" y este tendra un mensaje personalizado para la validacion que ejecutamos ANTES que este metodo.
+router.post("/signup", check("email").isEmail().withMessage("Please enter a valid email"), authController.postSignup);
+
+4. Custom validator
+Puedo agregar un validador customizacion con el metodo .custom(CALLBACK).
+El callback recibe un valor (el que utilizamos para chequear en un primer momento) y, opcionalmente, un objeto donde podemos tomar la peticion, locacion y path. En caso de que nuestra validacion no encuentre ningun error debemos retornar "true". Podemos no hacer el throw de un error y retornar false si queremos un mensaje de error por default. Otra manera es retornar una promesa rechazada con el mensaje dentro. Custom va a manejar cualquiera de las tres variables en caso de rechazo.
+
+Ejemplo:
+router.post("/signup", 
+    check("email")
+    .isEmail()
+    .withMessage("Please enter a valid email")
+    .custom((value, {req, path, location}) => {
+        if(value === "test@test.com"){
+            throw new Error("This email is forbidden.");
+            //return false;
+        }
+        return true;
+    }),
+authController.postSignup);
+
+5. Multiples validaciones
+Si bien es opcional, puedo encerrar mis check en un array para que se entienda que son validaciones.
+Puedo pasar como segundo parametro en el check/body/etc() un mensaje por default para cualquier error en vez de usar la funcion withMessage();
+
+Ejemplo: 
+router.post("/signup",
+[ 
+    check("email")
+    .isEmail()
+    .withMessage("Please enter a valid email"),
+    body("password", "Please enter a password with only numbers and text at least 5 characters")
+    .isLength({min : 5})
+    .isAlphanumeric()
+],
+authController.postSignup);
+
+6. Mantener el input del usuario
+Por lo general, aunque falle la validacion, vamos a querer conservar la informacion que relleno el usuario.
+Un mecanismo para hacerlo desde el modelo MVC es pasarle un objeto con los viejos inputs a la view para renderizarlo.
+
+Ejemplo:
+oldInput : {
+    email : email,
+    password : password,
+    confirmPassword : req.body.confirmPassword
+}
+Luego lo renderizamos en la vista en EJS, para un formulario lo cambiamos en el atributo value="<%=ATRIBUTO_QUE_LE_PASO%>". Para un GET o alguien que recien inicia la vista simplemente le pasamos un string vacio asi EJS puede reconocer que hay un valor, aunque este vacio.
+
+7. Sanitizacion de data
+Podemos "sanitizar" el input del usuario, ya sea removiendo espacios en blanco a al comienzo y al final, haciendo una cadena lowercase, etc. Todas estas funciones se encuentra disponible en la documentacion. 
+Segun el instructor los sanitizadores van luego de la logica de validaciones (no encontre documentacion que respalde lo dicho).
+
+8. Resumen del modulo
+Aplicamos logica para validar el input del usuario. Ademas utilizamos una herramienta como express-validator que nos provee de funciones que una vez ejecutadas nos returnan un middleware. A su vez este paquete es capaz de generar un array de errores dontro de la peticion para que hagamos nuestra logica una vez llega al controlador.

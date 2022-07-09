@@ -11,6 +11,7 @@ Por ello vamos a utilizar un paquete de terceros para un servidor de emails, de 
 2. Uso de MailTrap y NodeMailer
 https://morioh.com/p/56a03d5c93c5
 https://www.npmjs.com/package/@sendgrid/mail
+https://www.freecodecamp.org/news/what-is-sendgrid-smpt-email-newsletter-tutorial/
 En el curso se utiliza SendGrid y un paquete para nodemailer de esta pagina pero hubo cambios en los paquetes que se utilizan y se recomienda en los comentarios esta version.
 Mailtrap es un tester para enviar mails y quedan atrapados en la web de ellos, no se envia a una casilla.
 Nodemailer es un paquete que hace el enviar emails desde NodeJs muy facil.
