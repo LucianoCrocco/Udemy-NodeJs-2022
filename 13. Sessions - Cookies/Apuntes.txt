@@ -78,7 +78,7 @@ saveUninitialized: Garantizará que no se guarde ninguna sesión para una petici
 Tambien podemos configurar la cookie de la sesion con cookie : {}. 
 
 
-Este middleware va a generar una cookie con un valor hasheado (la key secret es el hasheo). Por default es una session cookie, por lo que caducará una vez se cierre el navegador. Esta cookie identificará al usuario con el servidor.
+Este middleware va a generar una cookie con un valor hasheado (la key secret es el hasheo). La cookie se va a mantener en el navegador hasta que la sesion expire. Esta cookie identificará al usuario con el servidor.
 Esta sesion nos va a permitir compartir informacion a traves de las distintas peticiones para ese unico usuario.
 Este mecanismo es el nucleo de autenticacion de usuario en una web MVC donde renderizamos las vistas. Para una REST API hay otras maneras.
 

@@ -202,7 +202,7 @@ productId : {
 
 11. Metodo importante de Moongose
 https://mongoosejs.com/docs/4.x/docs/populate.html
-Si tuvieramos una relacion donde dentro de un objeto tenemos el id de otro modelo y queremos traerlo normalmente hariamos las queries de find() cone se objeto.
+Si tuvieramos una relacion donde dentro de un objeto tenemos el id de otro modelo y queremos traerlo normalmente hariamos las queries de find() con ese objeto.
 Moongose tiene un metodo especial llamado populate("DATO DE LA REFERENCIA", "Que campos del modelo traer"). Sabe a donde buscar la referencia porque cuando definimos el esquema utilizamos la propiedad ref.
 
 Ejemplo:

@@ -1,0 +1,82 @@
+18. Error Handling
+
+¿Que hay en este modulo?
+Diferentes tipos de errores
+Manejo de errores
+
+Useful resources:
+Error Handling in Express.js - Official Docs: https://expressjs.com/en/guide/error-handling.html
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+https://www.webfx.com/web-development/glossary/http-status-codes/
+
+1. Tipos de errores y su manejo
+Los errores no son necesariamente la terminacion de nuestra app. Podemos recuperarnos de los errores, podemos informar al usuario que paso algo y deberia reintentar, simplemente tenemos que manejar los errores de manera correcta.
+
+Diferentes tipos de errores
+Tecnicos/Network Related -> Tenemos poca influencia, a no ser que seamos el administrador del sistema. Ej nuestro servidor de MongoDb esta caido, no hay mucho que podamos hacer, lo mejor seria informar al usuario con una pagina que despliegue un error, e informar al administrador que la pagina esta caida.
+Errores "esperados" -> No es un termino oficial. Hay ciertas operaciones como interactuar con un archivo o con una base de datos que pueden fallar, no son fallos que ocurran a menudo. Tal vez se producen porque hay muchas peticiones simultaneas a un mismo archivo o algo del estilo. Podriamos informar al usuario y dejarlo reintentar en un futuro.
+Bugs/Errores de logica -> Errores en nuestro codigo. Ej un objeto usuario que no existe. Estos errores deben ser corregidos durante desarollo y no deben llegar a producción.
+
+Trabajo con errores
+Hay errores donde estos son "lanzados".
+No hay error lanzado, por ejemplo tratar de hacer un console.log de un usuario que no existe.
+Hay ciertas herramientas que podemos utilizar para testear el codigo y detectar potenciales errores.
+Para codigo sincrono seria el try-catch, para codigo asincrono try-catch y .then().catch() en el caso de promesas. En ambos escenarios podemos elegir manejar nostotros mismos el error o, si utilizamos algun mecanismo, un middleware especial para el manejo errores.
+Para lo casos donde no se lanza el error tendriamos que chequear el valor que tenemos. Luego podriamos lanzar el error o manejarlo directamente en el scope donde nos encontramos.
+
+En todos los casos tenemos maneras diferentes de comunicarnos con el cliente. Podemos retornar una pagina de error, podemos retornar la pagina donde ocurrio el error con los datos precargados y un mensaje de error en esa pagina y por ultimo podemos redireccionar.
+
+2. Manejador de errores
+https://expressjs.com/es/guide/error-handling.html
+Puedo lanzar un error en lugares con codigo SINCRONO, que no es catcheado por ningun try-catch propio, y Express lo va a manejar con su manejador de errores. Si es asincrono debo pasarlo por next(ERROR) como veremos mas adelante.
+
+Documentacion: "Express se suministra con un manejador de errores incorporado, que se encarga de los errores que aparecen en la aplicación. Esta función de middleware de manejo de errores predeterminada se añade al final de la pila de funciones de middleware. 
+Si invoca next() con un error después de haber empezado a escribir la respuesta (por ejemplo, si encuentra un error mientras se envía la respuesta en modalidad continua al cliente), el manejador de errores predeterminado de Express cierra la conexión y falla la solicitud."
+
+Podemos configurar el funcionamiento del middleware para que muestre algo y no rompa la conexion del cliente con el servidor.
+Si controlamos un error, podemos pasarlo como argumento al middleware next(). Este, al identificar que se le paso un objeto error por parametros, va a ir directamente al middleware que maneja errores de Express, salteando todos los demas.
+
+Todos los middleware que agregamos hasta ahora recibian los mismos argumentos: req, res, next. Este middleware de error lo puedo personalizar generandolo al final de los otros middleware de mi app. Este middleware de errores va a recibir estos tres argumentos tambien pero agrega como primer argumento el parametro "error". Express se va a dar cuenta que es un middleware para el manejo de errores lanzados a traves del middleware NEXT(ERROR). Si tenemos mas de un middleware para el manejo de errores se van a ejecutar de arriba hacia abajo.
+
+Ejemplo:
+En un controller cacheo un error, genero el objeto de error y le agrego un atributo on the fly
+.catch(err => {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
+});
+app.use((error, req, res, next) => {
+    res.redirect(`/${error.httpStatusCode}`);
+})
+Al final de mis middleware en el punto de entrada de mi app agrego el/los middleware/s de manejo de errores.
+No es recomendable redireccionar en el middleware de error. En cambio deberiamos generar alli mismo la respuesta que le enviamos al cliente. Esto es asi porque si redireccionamos y el error se lanzo en un middleware que se ejecuta siempre se vuelve un loop infinito.
+app.use((error, req, res, next) => {
+    // res.redirect(`/${error.httpStatusCode}`);
+    res.status(500).render("500", {pageTitle : "Server Side Error", path : "/500", isAuthenticated: req.session.isLoggedIn})
+})
+
+
+3. Status Code
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+https://www.webfx.com/web-development/glossary/http-status-codes/
+Los codigo de estados son informacion extra que ayudan al navegador entender que sucedio. Ya sea para bien como para mal.
+Los codigo de estado tambien nos permiten entender si un error sucedio, que tipo de error fue.
+
+En nuestra app generalmente vamos a redireccionar, cuando ocurre un error recien ahi renderizamos en el momento una pagina con un status code. Mas adelante cuando veamos REST API's vamos a utilizar los status code mucho mas.
+
+2xx -> Success status codes
+3xx -> Redirection
+4xx -> Client-Side error
+5xx -> Server-Side error
+
+4. Resumen del modulo
+
+Types of Errors & Handling Errors
+Podemos diferenciar los distintos tipos de errores - Errores tecnicos (que son lanzados) y errores esperables (ej. Input invalido).
+El manejo de errores puede hacerse con if-checks customizados, try-catch, .then().catch(), etc.
+Podemos usar el middleware de errores de Express para manejar errores no catcheados y manejados.
+
+Errors & Satus Code
+Cuando retornamos una respuesta, tiene setido que este acompañada por un codigo de estado HTTP. Esto le permite al navegador saber que sucedio.
+Podemos elegir codigos para exito (2xx), redireccion (3xx), errores en el lado del cliente (4xx) y errores en el lado del servidor (5xx).
+Setear un codigo de estado no quiere decir que la respuesta esta incompleta o que la app creasheo.

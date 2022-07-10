@@ -34,7 +34,6 @@ exports.getEditProduct = (req, res, next) => {
 exports.getProducts = (req, res) => {
     Product.find({userId : req.user._id})
     .then(products => {
-        // console.log(products)
         res.render("./admin/products", {
             prods : products, pageTitle : "Admin Products", path : "/admin/products"
         });
@@ -74,21 +73,6 @@ exports.postAddProduct = (req, res) => {
         res.redirect("/admin/products");
     })
     .catch(err => {
-        // return res.status(500).render("./admin/edit-product",{
-        //     pageTitle : "Add Product", 
-        //     path : "/admin/add-product", 
-        //     editing : false, 
-        //     hasError : true,
-        //     product : {
-        //         title : req.body.title,
-        //         imageUrl : req.body.imageUrl,
-        //         price : req.body.price,
-        //         description : req.body.description
-        //     },
-        //     errorMessage : 'Server-side operation failed, please try again.',
-        //     validationErrors : []
-        // });
-        // return res.redirect("/500");
         const error = new Error(err);
         error.httpStatusCode = 500;
         return next(error);
