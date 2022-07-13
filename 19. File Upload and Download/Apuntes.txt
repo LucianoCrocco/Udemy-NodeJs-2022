@@ -1,0 +1,190 @@
+19. File Upload & Download
+
+¿Que hay en este modulo?
+Uploading files
+Handle files on the server
+Downloading/Returning files
+
+Useful resources:
+Multer Official Docs: https://github.com/expressjs/multer
+Streaming Files: https://medium.freecodecamp.org/node-js-streams-everything-you-need-to-know-c9141306be93
+Generating PDFs with PDFKit: http://pdfkit.org/docs/getting_started.html
+
+1. Manejar informacion Multipart/Form-Data
+https://developer.mozilla.org/es/docs/Web/HTML/Element/form
+https://www.npmjs.com/package/multer
+https://stackoverflow.com/questions/57126277/multer-and-csrf-protection
+Todos los formularios POST que manejamos hasta el momento tienen por default un enctype "application/x-www-form-urlencoded". El middleware que utilizamos podia parsear informacion de este tipo (texto plano). Vamos a ver una nueva manera de enviar formularios con archivos, y para ello el enctype va a pasar a ser "multipart/form-data" por lo que necesitaremos un nuevo middleware que pueda manejar texto plano y archivos. Todavia vamos a seguir utilizando el middleware que teniamos ya que tenemos formularios que se envian solo con texto plano.
+
+Hasta el momento utilizamos el middleware urlencoded para parsear el cuerpo de un formulario. url-encoded-data es basicamente un formato donde todo lo que se envia en el formulario es texto plano. Podemos verlo en las herramientos de desarrolladores en Chrome, en la pestaña de Network, podemos ver en los headers de la peticion el Content-Type: application/x-www-form-urlencoded, quiere decir que trata de poner toda la data como texto en el form body. 
+No puede extraer un archivo ya que un archivo es data en binario.
+Este middleware es obsoleto para las peticiones con archivo, asi que vamos a utilizar un nuevo middleware llamado "multer". 
+
+Multer es un paquete de terceros que parsea las peticiones entrantes como lo hacia urlencoded, pero este paquete tambien es capaz de manejar archivos ademas de texto plano.
+
+Para que multer pueda parsear informacion vamos a tener que setear nuestro formularios al enctype "multipart/form-data". Esto la va a decir al servidor que no solo enviamos texto plano, sino tambien datos binarios. El middleware de multer va buscar este tipo de envios y los va a parsear, tal como hacia el de urlencoded con el otro enctype.
+
+Cuando le hacemos el require y lo asignamos a una variable tenemos que llamarlo como metodo dentro de un middleware y podemos pasarle un objeto JS con opciones. 
+Multer tiene varios metodos como single, any, array, etc. Esto es para decirle a multer que tipo de archivos esperamos. Luego le pasamos como argumento el name que le asiganmos a ese campo en el formulario. Por lo que quedaria algo asi una vez importamos el modulo y lo asignamos a una variable: app.use(multer.({OPCIONES}).TIPOS(OPCIONES)) 
+Leer la documentacion para mas informacion.
+
+El archivo es guardado en el campo .file de la request. Este campo esta compuesto por informacion como el fieldname, originalname, encoding, mimetype, buffer y size. El buffer es la manera que tiene node para manejar datos en binario, al final es el resultado de los datos transmitidos y es recopilado en el buffer (Los apuntes de buffer estan en la seccion 2). 
+Podemos trabajar con el buffer para convertirlo en un archivo.
+La opcion dest hace que en vez de guardar el buffer en memoria lo vuelve a convertir de nuevo en informacion binaria y guardarlo en el path que le indicamos. Ese archivo va a tener un nombre random "hasheado" y no lo va a reconocer como una imagen. Sin embargo si le agrego una extension al final puedo ver la imagen nuevamente.
+
+Ejemplo:
+Formulario con un seteo del enctype necesario
+<form method="POST" enctype="multipart/form-data">
+    //Logica
+</form>
+
+Middleware de Multer
+Lo importamos en nuestro archivo de entrada.
+const multer = require("multer");
+Lo agregamos como un middleware de nuestra app antes de la ruta, tal cual hicimos con urlencoded. Tiene que ir antes del csrf token
+app.use(multer().single('NAME')); 
+
+2. Configurar multer para ajustar el Filename y Filepath
+Podemos utilizar la opcion "storage" que recibe un objeto el cual podemos configurar, en vez de utilizar la opcion de "dest" que simplemente le indicamos un path de donde guardar un archivo. 
+La configuracion de "storage" se logra con un metodo de multer llamado .diskStorage() que dentro recibe un objeto JS con la configuracion, esta configuracion se basa en las funciones "destination" y "filename". Multer va a llamar estas funciones cuando se este recibiendo un archivo y van controlar como se maneja el archivo con respecto al lugar donde lo vamos a almacenar y el nombre.
+
+Existe mas opciones para almacenar, el metodo .diskStorage() es una de ellas, tambien podemos usar memoryStorage y otros paquetes de terceroos. Leer la documentacion.
+
+Destination es una funcion que recibe el objeto request, el archivo y un callback que tenemos que llamar una vez tenemos seteado el destino.
+El callback recibe como primer argumento un error, en caso de no haberlo le pasamos null, y como segundo argumento el destino de donde vamos a guardar este archivo.
+
+Filename es una funcion y recibe el objeto request, alguna data sobre el archivo y un callback.
+El callback recibe como primer argumento un error, en caso de no haberlo le pasamos null, y como segundo el nombre que va tener el archivo. Para mantener el nombre del archivo vamos a utilizar el parametro file y pasarle una combinacion de new Date.toISOString + "-" + .originalname. Utilizamos el objeto Date para que no se sobreescriba un archivo con el mismo nombre, existe un problema con Windows cuando utilizamos los ":". En el ejemplo pongo la solucion
+
+Ejemplo:
+Configuracion del objeto fileStorage
+const fileStorage = multer.diskStorage({
+    destination : (req, file, cb) => {
+        cb(null, './images');
+    },
+    filename : (req, file, cb) => {
+        cb(null, new Date().toISOString() + "-" + file.originalname);
+    } 
+});
+The issue is that ":" is not allowed in a Windows file name. The following works:
+cb(null, new Date().toISOString().replace(/:/g, '-') + file.originalname)
+
+
+En el middleware asigno este comportamiento al objeto storage
+app.use(multer({storage : fileStorage}).single('image'));
+
+3. Filtrar archivos por mimetype
+https://docs.w3cub.com/http/basics_of_http/mime_types/complete_list_of_mime_types.html
+Filtramos por mimetype asignando al multer, en el objeto de configuracion, la key "fileFilter". Se le debe asignar una funcion que recibe el objeto request, el archivo y un callback.
+El callback recibe como primer argumento un error, si no hay error simplemente pasamos null como argumento. Y luego true si queremos guardar ese archivo, de lo contrario pasamos false como segundo argumento.
+Para filtrar el tipo de mimetye podemos filtrar con las sentencias de control de flujo. El objeto file tiene dentro un atributo mimetype con el cual podemos chequear el tipo de la imagen.
+
+Ejemplo:
+Configuro la funcion para luego pasarla al middleware
+const fileFilter = (req, file, cb) => {
+    if(file.mimetype === "image/png" || file.mimetype === "image/jpg" || file.mimetype === "image/jpeg"){
+        cb(null, true);
+    } else {
+        cb(null, false);
+    }
+}
+Lo paso a la configuracion del  middleware
+app.use(multer({storage : fileStorage, fileFilter : fileFilter}).single('image'));
+
+4. Guardar informacion de archivos
+Los archivos no deben ser guardadas en la base de datos, son demasiado grandes y es muy ineficiente para hacer consultas. Lo mejor es guardarlos en el disco del sistema.
+Por supuesto tenemos que guardar algo en la base de datos, una referencia al archivo que tenemos guardado.
+Una manera es guardar el PATH al archivo desde la carpeta donde se guardo. Ej: const imageUrl = image.path; Guardaria "CARPETA_MULTER_DESTINATION/NOMBRE_ASIGNADO". 
+El path es relativo desde la carpeta y no desde la raiz, a hora de servir las imagenes esto nos puede dar problemas ya que el servir archivos estaticos toma como raiz el proyecto. Lo estabamos gurdando como "images/..." sin el "/" al comienzo. Por ello vamos a agregar "/" y concatenamos el resto, de esta manera la servir el archivo estatico el imageUrl va tener el path absoluto. Ej: const imageUrl = "/" + image.path; 
+Tambien al indicar un PATH absoluto nos ahorramos el hecho de que si ejecutamos el codigo dentro de una carpeta, tome esa carpeta dentro del path.
+
+5. Servir imagenes estaticas
+Existen multiples opciones para servir imagenes desde el servidor al cliente. El accionar que vamos a tomar es el mismo que para los archivos estaticos que se sirven en los HTML.
+Utilizaremos un middleware donde se ejecutar el metodo express.static() para servir archivos estaticos, de la misma manera que hace con el CSS y JS.
+Servir archivos de manera estatica una carpeta simplemente quiere decir que las peticiones a archivos en esa carpeta van a ser manejados automaticamente y los archivos se van a retornar. 
+
+app.use("/images", express.static(path.join(rootDir, "images"))); 
+Agrego "/images" para que el path sea correcto a la hora de que express pueda encontrar la imagenes para servirlas.
+
+Unfortunately, instead of just storing the image in the database, we store the full path. Have a look at Compass, the imageUrl looks like "\images\xyz.jpg"
+
+So when you pass the imageUrl of the product in the .ejs file : "/<%= product.imageUrl %>", what it actually represents is "\images\xyz.jpg"
+
+Explicacion:
+When we do app.use(express.static(path.join(__dirname, 'images'))); , we expose the content of root/images into root. But as you can see, your actual images folder only contains the filename ("xyz.jpg"), without the "images\" prefix. So by exposing our images folder into root, our actual image url could be served using the following path: http://localhost:3000/xyz.jpg , while at the same time the ejs file is trying to display http://localhost:3000/images/xyz.jpg.
+
+By amending it to app.use('/images', express.static(path.join(__dirname, 'images'))); , what we actually do is mount a virtual "/images" path and serve the images from there, which happens to fix the issue that we stored the image path together with the name, because now the url where express will be serving the image from is http://localhost:3000/images/xyz.jpg, which is what we have in the .ejs template.
+
+Try this: edit the record in your database by deleting the "images\" part of your imageUrl. Now app.use(express.static(path.join(__dirname, 'images'))); will be able to serve it just fine.
+
+In the postAddProduct method, when we are saving the imageUrl like this: const imageUrl = image.path;what we could've actually done is use  const imageUrl = image.filename; this way, the "/images" virtual path would not be needed.
+
+I don't think it's a mistake to save the full path at all, it just seems unnecessary to me and it seems to have led to some confusion.
+
+
+Long story short:
+
+if we declare just app.use(express.static(path.join(__dirname, 'images')));  Node will think our uploaded images are located in the root folder (the main folder where all our project's files and folders reside ) root/image.jpg. To tell Node to look inside images folder we need to pass an extra parameter to the above middleware, the /images  parameter: app.use('/images', express.static(path.join(__dirname, 'images'))); , now Node will look inside our images folder root/images/image.jpg . Then we need to add /  in our views to build an absolute path to our images: http://localhost:3000/images/image.jpg .
+
+6. Descargar archivos
+https://stackoverflow.com/questions/35048686/whats-the-difference-between-path-resolve-and-path-join
+How path.join() works: If you don't provide an absolute path then the path is by default relative to the current working directory (i.e. the value of process.cwd()).
+fs.readFile returns a buffer and if you send a buffer to res.send then it'll set the Content-Type header to application/octet-stream which the browser recognizes as a stream of binary data (i.e. a download).
+
+Para descargar archivos a un cliente podriamos generar una ruta donde le pasamos por parametros un identificador. Luego con ese identificador hacer nuestra logica y traer desde el sistema un archivo para enviarselo.
+Para enviarlo podriamos utilizar el modulo del filesystem, donde lo vamos a traer con la ayuda del modulo path para contruir la ruta y enviamos el archivo en la respuesta.
+
+Ejemplo:
+Genero la ruta
+router.get("/orders/:orderId", isAuth, shopController.getInvoice);
+
+Luego agrego un enlace o similar donde el usuario pueda hacer click y se ejecute el controlador de la ruta.
+<a href="/orders/<%=order._id%>">Invoice</a>
+
+En el controlador importamos el modulo fileSystem y realizamos el trabajo de logica
+const fs = require("fs");
+const path = require("path");
+exports.getInvoice = (req, res, next) =>{
+    const orderId = req.params.orderId;
+    const invoiceName = 'invoice-' + orderId + '.pdf';
+    const invoicePath = path.join("data", "invoices", invoiceName);
+    fs.readFile(invoicePath, (err, data) => {
+        if(err) {
+            return next(err);
+        }
+        res.send(data);
+    })
+} 
+
+7. Seteo de File Type Headers
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers
+Podemos pasarle informacion extra al navegador para que utilice una extension correcta, nombre de archivo distinto, si lo descarga o lo muestra, el nombre, etc. Para ello vamos a setear headers. 
+
+Ejemplo:
+res.setHeader("Content-Type", "application/pdf");
+res.setHeader("Content-Disposition", `attachment; filename=${invoiceName}`)
+res.send(data);
+
+8. Streaming Data vs Preloading Data
+https://www.geeksforgeeks.org/node-js-fs-createreadstream-method/
+https://stackoverflow.com/questions/13106096/stream-files-in-node-express-to-client
+Podemos mejorar la manera de servir archivos a los usuarios. La forma que vimos en la seccion 6 para archivos pequeños puede ser una solucion correcta, pero puede llegar a ser muy ineficiente si tenemos archivos grandes.
+readFile va a acceder al archivo, leera por completo el contenido en la memoria y luego lo devolvera con la respuesta. Esto significa que para archivos grandes llevará mucho tiempo antes que se envie una respuesta y la memoria podria desbordarse en algún momento. Sobre todo si nos llegan muchas solicitudes.
+
+Por lo tanto podemos decir que leer informacion de los archivos y cargar la lectura en memoria para luego generar una respuesta no es una buena practica. Para archivos de muy poco tamaño puede estar bien, pero para archivos mas grandes no. En vez de hacer este proceso deberiamos stremear/transmitir los datos de respuesta.
+
+Ejemplo:
+const invoiceName = 'invoice-' + orderId + '.pdf';
+const invoicePath = path.join("data", "invoices", invoiceName);
+const file = fs.createReadStream(invoicePath);
+res.setHeader("Content-Type", "application/pdf");
+res.setHeader("Content-Disposition", `inline; filename=${invoiceName}`)
+file.pipe(res);
+
+En este proceso createReadStream() va a leer la informacion en pequeños trozos y pipe(req) va a enviar esos chunks que se estan leyendo a la respuesta. El objeto respuesta puede ser escrito en secuencias, por lo que podemos usar streaming de lecturas para ir pasandole el resultado a la respuesta. No todos los objetos tiene la caracteristica de ser "writable stream", el respuesta si posee esta caracteristica.
+La respuesta se transmitirá al navegador con los datos y los datos al ser chunks serán descargados paso a paso. Para archivos largos esto es una gran ventaja ya que para Node no es necesario precargarlos en memoria. Simplemente la transmite al usuario on the fly y lo maximo que tiene que guardar en memoria es un chunk de la informacion. El navegador es capaz de concatenar estos chunks que le pasamos en un archivo final.
+
+9. PDFKit para generar archivos PDF on the fly en el server
+https://www.npmjs.com/package/pdfkit
+
+Leer la documentacion.

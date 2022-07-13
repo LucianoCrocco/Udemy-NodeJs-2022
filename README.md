@@ -21,3 +21,5 @@ Secciones
 16. Advanced Authentication
 17. Understanding Validation
 18. Error Handling
+19. File Upload & Download
+20. Adding Pagination
