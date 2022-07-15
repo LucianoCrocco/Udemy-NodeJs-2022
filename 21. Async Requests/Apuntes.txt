@@ -1,0 +1,110 @@
+21. Understanding Async Requests
+
+Hasta ahora en el curso siempre vimos una forma particular de peticiones y respuestas.
+La peticion siempre era enviada desde el navegador cuando enviabamos un formulario, entramos a una URL o clickeamos un link.
+La respuesta siempr era redireccionar o una nueva pagina HTML.
+
+Esto nos puede llevar muy lejos pero a veces tenemos algun trabajo, alguna peticion que solo pasa detrás de escenas. No siempre vamos a querer una nueva pagina HTML. Tal vez tan solo queremos intercambiar alguna informacion con el servidor sin tener que recargar el HTML.
+
+¿Que veremos en el modulo?
+Que son las peticiones asincronas en JS
+Por que usariamos peticiones asincronas
+Como se usan las peticiones asincronas
+
+Useful resources:
+More on the fetch API: https://developers.google.com/web/updates/2015/03/introduction-to-fetch
+More on AJAX Requests: https://developer.mozilla.org/en-US/docs/Web/Guide/AJAX/Getting_Started
+
+1. ¿Que son las peticiones asincronas?
+En aplicaciones web modernas la porcion que ocurre detras de escena crece, ya que podemos hacer mucho con JavaScript del lado del cliente donde nunca tenemos que buscar una nueva pagina HTML pero constantemente vamos a estar cambiando la pagina existente porque es mucho mas rapido que cargar una nueva.
+La idea detras de las peticiones asincronas es que se envíe una peticion al servidor con cierta URL/ruta que acepta y generalmente la peticion contiene algunos datos, en un formato especial llamado JSON. El servidor puede hacer lo que quiera con esos datos y luego envia una respuesta que tambien es enviada detras de escenas (no es un nuevo HTML que necesita ser renderizado) con datos JSON.
+
+De esta manera las peticiones permiten cambiar el DOM sin tener la necesidad de generar un nuevo HTML o tener que recargar la pagina.
+
+2. JSON Data format
+What is JSON?
+
+JSON stands for JavaScript Object Notation and a typically JSON data structure looks like this:
+
+{
+    "name": "Your Name",
+    "age": 29,
+    "courses": [
+        "angular-the-complete-guide",
+        "react-the-complete-guide"
+    ],
+    "profile": {
+        "joined": "2017-05-21",
+        "courses": 2
+    },
+    "averageRating": 4.8,
+    "active": true
+}
+It looks a lot like a normal JavaScript object, but one important difference is that all key names are enclosed by double quotation marks (").
+
+Besides that, you can store text (string), numeric (integers and floats) and boolean data as well as nested objects and arrays.
+
+You can dive deeper on this page: https://www.json.org/
+
+3. Seteo de JS en el cliente. Envio y manejo de peticiones detras de escena.
+Al estar usando EJS vamos a pasarle la funcion del evento al tag HTML ya que addEventListener no parece funcionar y no encuentro el porqué no funcionaria en EJS. (¿Tal vez NodeJs no soporta este comportamiento de JS y en linea por algun motivo pareciaria funcionar porque se renderiza en el navegador?)
+
+Cuando enviamos una peticion desde el cliente hacia el servidor tenemos mas acceso a verbos semanticos de http que get/post. Veremos esto mas adelante con API REST.
+
+Ejemplo:
+    En el EJS:
+<button class="btn" id="delButton" onclick="deleteProduct(this)">Delete</button> -> Seteamos el evento en la tag y le pasamos la funcion definida en admin.js
+<script src="/js/admin.js"></script> -> Cargamos el script al final para asegurarnos que este cargado todo el DOM.
+
+    En el archivo JS:
+const deleteProduct = (btn) => {
+    //Logica
+}
+
+    En la logica del servidor:
+router.delete("/product/:productId", isAuth, adminController.deleteProduct); -> Ruta
+
+exports.deleteProduct = (req, res) => { -> Controlador
+    const prodId = req.params.productId;
+    Product.findById(prodId)
+    .then(product => {
+        if(!product){
+            return next(new Error("Product not found"));
+        }
+        const imagePath = product.imageUrl.substring(1); //Le quito el path absoluto y le doy el relativo.
+        deleteFile(imagePath);
+        return Product.deleteOne({_id : prodId, userId : req.user._id})
+    })
+    .then(result => {
+        console.log("Destroy product")
+        // res.redirect("/admin/products")
+        res.status(200).json({message : "Success"})
+    })
+    .catch(err => {
+        res.status(500).json({message : "Deleting product failed"})
+    });
+}
+
+const deleteProduct = (btn) => { -> Manejo de DOM y envio de data al servidor
+    const prodId = btn.parentNode.querySelector("[name=productId]").value;
+    const csrf = btn.parentNode.querySelector("[name=_csrf]").value;
+
+    const productElement = btn.closest("article");
+
+    fetch(`/admin/product/${prodId}`, {
+        method : 'DELETE',
+        headers : { //El paquete csurf busca el token en los headers tambien
+            'csrf-token' : csrf
+        }
+    })
+    .then(result => {
+        return result.json();
+    })
+    .then(data => {
+        console.log(data);
+        productElement.remove();
+    })
+    .catch(err => {
+        console.log(err)
+    });
+}

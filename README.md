@@ -23,3 +23,5 @@ Secciones
 18. Error Handling
 19. File Upload & Download
 20. Adding Pagination
+21. Understanding Async Requests
+22. Adding Payments

@@ -99,6 +99,7 @@ El path es relativo desde la carpeta y no desde la raiz, a hora de servir las im
 Tambien al indicar un PATH absoluto nos ahorramos el hecho de que si ejecutamos el codigo dentro de una carpeta, tome esa carpeta dentro del path.
 
 5. Servir imagenes estaticas
+https://expressjs.com/es/starter/static-files.html
 Existen multiples opciones para servir imagenes desde el servidor al cliente. El accionar que vamos a tomar es el mismo que para los archivos estaticos que se sirven en los HTML.
 Utilizaremos un middleware donde se ejecutar el metodo express.static() para servir archivos estaticos, de la misma manera que hace con el CSS y JS.
 Servir archivos de manera estatica una carpeta simplemente quiere decir que las peticiones a archivos en esa carpeta van a ser manejados automaticamente y los archivos se van a retornar. 
@@ -188,3 +189,28 @@ La respuesta se transmitirá al navegador con los datos y los datos al ser chunk
 https://www.npmjs.com/package/pdfkit
 
 Leer la documentacion.
+
+Ejemplo:
+const invoiceName = 'invoice-' + orderId + '.pdf';
+const invoicePath = path.join("data", "invoices", invoiceName);
+
+const pdfDoc = new PDFDocument();
+res.setHeader("Content-Type", "application/pdf");
+res.setHeader("Content-Disposition", `inline; filename=${invoiceName}`);
+pdfDoc.pipe(fs.createWriteStream(invoicePath));
+pdfDoc.pipe(res);
+
+pdfDoc.fontSize(26).text("Invoice", {
+    underline : true,
+    align : "center"
+});
+pdfDoc.text("-----------------------");
+let totalPrice = 0;
+order.products.forEach(p => {
+    pdfDoc.fontSize(14).text(p.product.title + " - " + p.quantity + ' x ' + "$" +  p.product.price);
+    totalPrice += p.product.price * p.quantity;
+})
+pdfDoc.text("-----------------------");
+pdfDoc.fontSize(20).text(`Total price: $${totalPrice}`);
+
+pdfDoc.end();

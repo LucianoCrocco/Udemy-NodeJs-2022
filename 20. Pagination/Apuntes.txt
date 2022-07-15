@@ -1,3 +1,73 @@
 20. Adding Pagination
 
 La paginacion nos permite separar los datos a traves de multiples paginas.
+
+
+1. Añadir paginacion de manera dinamica y su implementacion.
+Existe paquetes de terceros para aplicar paginacion, nosotros lo haremos desde cero.
+Dentro de las vistas vamos a generar botones que contengan query parametrs. Ej: <a href="/?page=1">1</a>
+
+Una manera de generar dinamicamente este tipo de botones es buscar la cantidad total de elementos existentes en la base de datos (en nuestro caso documentos) con .countDocuments() y teniendo en cuenta esta informacion generar de manera dinamica los botones. Esta informacion se la vamos a pasar a la vista que va a ser al encarga de realizar la logica/realizaremos la logica en los atributos a pasarle. 
+
+Para controlar la cantidad que nos trae mongoDb y mongoose existe un metodo llamado .skip(), se lo añadimos al cursor (cualquier metodo que utilice un cursor) para saltear las primeras X cantidades de resultados y tambien vamos a querer restringir la cantidad de items que traemos, para ello utilizamos .limit(). Para implementar la logica en el skip: (pagina actual - 1) * CANTIDAD_MAXIMA_A_MOSTRAR;
+
+Podemos pasarle un atributo como "hasNextPage", "hasPreviousPage" y dentro hacer comparaciones con el total, la pagina y el total a mostrar para saber si hay siguiente/anterior pagina o no. Otros elementos a pasarle es el numero de la pagina anterior y siguiente, que se desplegaran si hasPreviousPage y hasNextPage son verdaderos, la ultima pagina diviendo el total que nos dio countDocuments con el maximo por pagina, etc.
+
+Ejemplo en el controlador:
+const page = parseInt(req.query.page) || 1; -> Si no le paso un query param siempre es 1.
+let totalItems; 
+
+product.find()
+.countDocuments()
+.then(numberOfProducts => {
+    totalItems = numberOfProducts;
+    return Product.find()
+    .skip((page-1) * ITEMS_PER_PAGE)
+    .limit(ITEMS_PER_PAGE)
+})
+.then(products => {
+    res.render("./shop/index", {
+        prods : products, 
+        pageTitle : "Shop", 
+        path : "/", 
+        currentPage : page,  
+        hasNextPage : ITEMS_PER_PAGE * page < totalItems,
+        hasPreviousPage : page > 1,
+        nextPage : page + 1,
+        previousPage : page - 1,
+        lastPage: Math.ceil(totalItems/ITEMS_PER_PAGE)
+    });
+})
+
+En la vista:
+<section class="pagination">
+    <% if (currentPage !== 1 && previousPage !== 1) { %> 
+        <a href="?page=1">&#8810; 1</a> 
+    <% } %>
+
+    <% if (hasPreviousPage) { %> 
+        <a href="?page=<%=previousPage%>">&#60; <%=previousPage%></a> 
+    <% } %>
+
+    <a href="?page=<%=currentPage%>" class="active"><%=currentPage%></a>
+
+    <% if(hasNextPage) { %> 
+        <a href="?page=<%=nextPage%>"><%=nextPage%> &#62;</a> 
+    <% } %>
+
+    <% if (lastPage !== currentPage && nextPage !== lastPage) { %> 
+        <a href="?page=<%=lastPage%>"><%=lastPage%> &#8811;</a> 
+    <% } %>
+</section>
+
+2. Documentacion skip y limit en SQL
+When using MongoDB, you can use skip() and limit() as shown in the last lecture.
+
+But how would that work in SQL?
+
+Here's how you would implement pagination in SQL code: https://stackoverflow.com/questions/3799193/mysql-data-best-way-to-implement-paging
+
+To quickly sum it up: The LIMIT command allows you to restrict the amount of data points you fetch, it's your limit() equivalent. Combined with the OFFSET command (which replaces skip()), you can control how many items you want to fetch and how many you want to skip.
+
+When using Sequelize, the official docs describe how to add pagination: https://sequelize.org/master/manual/model-querying-basics.html
+

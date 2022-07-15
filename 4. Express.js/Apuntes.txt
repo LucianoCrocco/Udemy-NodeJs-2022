@@ -132,9 +132,15 @@ Basicamente module.export = path.dirname(require.main.filename); Nos da el direc
 require.main.filename returns the entry point of your application.
 
 15. Sirviendo archivos estaticos
+https://expressjs.com/es/starter/static-files.html
+https://stackoverflow.com/questions/68816405/can-someone-please-explain-how-static-files-in-express-js-work
+https://stackoverflow.com/questions/18900990/express-js-node-js-how-does-static-file-serving-really-work
+https://stackoverflow.com/questions/53002671/what-is-express-static-in-express
 Los archivos CSS por convencion van a la carpeta "public" ya que queremos indicar que esta carpeta contiene contenido que siempre está expuesto al publico.
 Para poder linkear un archivo CSS a un HTML necesitamos una de las caracteristicas que nos trae Express. Necesitamos poder servir archivos de forma estatica. Que sean estaticos significa que no van a ser manjeados por un enrutador de Express/Middleware o nada de este tipo, sino que se envian directamente al sistema de archivos. 
-Para linkear el CSS (puede ser cualquier archivo estatico, para el ejemplo vamos a suponer que queremos linkear CSS y HTML) de la carpeta public public a todos los <link> que querramos dentro de HTML vamos a utilizar el metodo .use() y dentro vamos a poner el metodo express.static("PATH"), static es un metodo para servir archivos estaticos. El PATH va a ser como vimos anteriormente, path.join("__dirname", "public"). Solo nos hace falta acceder a la carpeta public, despues cuando hagamos el linkeo en el HTML por defecto va a tomar como punto de partida este PATH que le indicamos.
+Para linkear el CSS (puede ser cualquier archivo estatico, para el ejemplo vamos a suponer que queremos linkear CSS y HTML) de la carpeta public a todos los <link> que querramos dentro de HTML vamos a utilizar el metodo .use() y dentro vamos a poner el metodo express.static("PATH"), static es un metodo para servir archivos estaticos. El PATH va a ser como vimos anteriormente, path.join("__dirname", "public"). 
+Despues cuando hagamos el linkeo en el HTML por defecto va a tomar como punto de partida este PATH que le indicamos. Esto quiere decir que a la hora de servir archivos estaticos va a recorrar las carpetas que le indicamos con el metodo static y va generar un PATH del root a esas carpetas DENTRO de public. Ejemplo: No vamos a tener un PATH /public/css/archivo.css, vamos a tener un path /css/archivo.css. Este metodo estatico busca dentro de las carpetas que le indicamos pero no toma la carpeta como parte del PATH. Si quisieramos que tome la carpeta como parte del PATH tendriamos que indicarselo en el primer argumento. 
+
 Ejemplo: 
 app.use(express.static(path.join(__dirname, "public"))); -> En donde levantamos el servidor y manejamos el ruteo.
 <link rel="stylesheet" href="/css/main.css"> -> Al definir arriba el PATH de los archivos estaticos, en este caso de la carpeta public, toma como punto de partida esa carpeta.
