@@ -1,7 +1,7 @@
 {
-  "name": "19-file-upload-and-downloading",
+  "name": "21-understanding-async-requests",
   "version": "1.0.0",
-  "description": "Seccion 19 del curso de NodeJs",
+  "description": "Seccion 21 del curso de NodeJs",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

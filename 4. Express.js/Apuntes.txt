@@ -135,7 +135,7 @@ require.main.filename returns the entry point of your application.
 https://expressjs.com/es/starter/static-files.html
 https://stackoverflow.com/questions/68816405/can-someone-please-explain-how-static-files-in-express-js-work
 https://stackoverflow.com/questions/18900990/express-js-node-js-how-does-static-file-serving-really-work
-https://stackoverflow.com/questions/53002671/what-is-express-static-in-express
+
 Los archivos CSS por convencion van a la carpeta "public" ya que queremos indicar que esta carpeta contiene contenido que siempre está expuesto al publico.
 Para poder linkear un archivo CSS a un HTML necesitamos una de las caracteristicas que nos trae Express. Necesitamos poder servir archivos de forma estatica. Que sean estaticos significa que no van a ser manjeados por un enrutador de Express/Middleware o nada de este tipo, sino que se envian directamente al sistema de archivos. 
 Para linkear el CSS (puede ser cualquier archivo estatico, para el ejemplo vamos a suponer que queremos linkear CSS y HTML) de la carpeta public a todos los <link> que querramos dentro de HTML vamos a utilizar el metodo .use() y dentro vamos a poner el metodo express.static("PATH"), static es un metodo para servir archivos estaticos. El PATH va a ser como vimos anteriormente, path.join("__dirname", "public"). 

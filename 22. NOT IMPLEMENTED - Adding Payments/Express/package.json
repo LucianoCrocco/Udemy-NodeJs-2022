@@ -1,7 +1,7 @@
 {
-  "name": "20-adding-pagination",
+  "name": "22-adding-payments",
   "version": "1.0.0",
-  "description": "Seccion 20 del curso de NodeJs",
+  "description": "Seccion 22 del curso de NodeJs",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

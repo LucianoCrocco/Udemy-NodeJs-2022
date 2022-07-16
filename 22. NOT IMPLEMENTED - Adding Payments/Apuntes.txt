@@ -1,0 +1,14 @@
+22. Adding Payments
+
+NO SE IMPLEMENTA POR RESTRICCION DE PAIS
+
+1. Como funcionan los pagos
+En un proceso largo. Empezamos recolectando la informacion de la tarjeta en un metodo, verificamos la veracidad de la informacion, lo cobramos y luego de cobrarlo tenemos que administrar el pago, eso incluye proteccion contra fraudes, manejo de disputas, etc. Por ultimo se procesa la orden en nuestra app. Todo el proceso salvo lo ultimo son tareas bastantes complejas, tanto del punto de vista legal como técnico, por ello se suele externalizar (hasta las grandes compañias lo externalizan).
+
+Stripe es una compañia muy popular que ofrece servicios de pago, ofrece una gran integracion y es muy facil de agregar a cualquier aplicacion.
+¿Como funciona Stripe?
+Tenemos nuestro cliente y nuestro servidor, en el cliente recopilaremos la data de la tarjeta con la ayuda de stripe y lo enviaremos al servidor de Stripe para validar ese Input. Una vez validado Stripe va a retornar un Token, que basicamente encodea/incluye la informacion de la tarjeta y la confirmacion de que es correcto, enviamos ese Token a nuestro servidor y creamos/generamos un cobro con la ayuda de Stripe nuevamente y lo enviamos a Stripe con el Token para que maneje el cobro, el manejo y obtendremos una respuesta una vez que lo haga
+
+2. Usando Stripe
+
+No puedo usar Stripe ya que no esta disponible para mi pais.

@@ -24,4 +24,6 @@ Secciones
 19. File Upload & Download
 20. Adding Pagination
 21. Understanding Async Requests
-22. Adding Payments
+22. NOT IMPLEMENTED - Adding Payments
+23. Working with REST APIs - The Basics
+24. Working with REST APIs - The Practical Application
