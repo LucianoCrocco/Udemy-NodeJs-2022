@@ -1,0 +1,21 @@
+24. Working with REST APIs - The Practical Application
+
+¿Que hay en este modulo?
+Planearemos nuestra API REST
+Operaciones CRUD & Endpoints
+Validation
+Subir Imagenes
+Authentication
+React 16 para el FrontEnd. Lo provee el instructor.
+
+
+1. REST API vs Lo visto hasta ahora en el curso
+Node + Express App Setup --> Sin cambios.
+Routing / Endpoints --> Sin cambios, mas metodos Http.
+Handling Requests & Responses --> Parse + Send JSON data, no generamos vistas. Ejemplos visto en la seccion de introduccion
+Request Validation --> Sin cambios
+Database Communication --> Sin cambios
+Files, Uploads, Downloads --> Sin cambios (solo el lado del cliente cambia).
+Sessions & Cookies -> No se utilizan Sesiones ni Cookies (La relacion entre ellos. Para JWT vamos a usar Cookies). Cada peticion es tratada de manera separada
+Authentication -> Diferente enfoque para la autenticacion.
+

@@ -7,9 +7,9 @@ exports.valPostLogin =
     .isEmail()
     .normalizeEmail(),
     body("password", "Password has to be valid")
+    .trim()
     .isLength({min : 5})
-    .isAlphanumeric()
-    .trim(),
+    .isAlphanumeric(),
 ]
 
 exports.valPostSignup = 
@@ -28,16 +28,16 @@ check("email")
     .normalizeEmail(),
 
 body("password", "Please enter a password with only numbers and text at least 5 characters")
+    .trim()
     .isLength({min : 5})
-    .isAlphanumeric()
-    .trim(),
+    .isAlphanumeric(),
 
 body("confirmPassword")
+    .trim()
     .custom((value, {req}) => {
         if(value === req.body.password){
             return true;
         }
         throw new Error("Passwords have to match!")
     })
-    .trim()
 ]

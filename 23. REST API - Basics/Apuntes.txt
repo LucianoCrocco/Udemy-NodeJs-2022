@@ -1,0 +1,173 @@
+23. Working with REST APIs - The Basics
+
+Nos vamos a ir del renderizado plantillas EJS para pasar a utilizar API's REST
+
+¿Que hay en este modulo?
+¿Que es exactamente una REST API?
+¿Por que las utilizariamos/construiriamos?
+Conceptos y principios escenciales de REST
+Nuestra primera REST API
+
+Useful resources:
+Example: Build a Complete RESTful API from Scratch: https://academind.com/learn/node-js/building-a-restful-api-with/
+
+1. ¿Que son las REST API's y por que las usariamos?
+No todas las UI necesitan paginas HTML. Aplicaciones como Twitter no trabajan con server-side HTML, no necesitan un template language en el servidor para renderizar el codigo HTML. Construimos la UI totalmente desacoplado del servidor. SPA's, Aplicaciones de Moviles, servicios de APIs y otro tipo de aplicaciones utilizan el REST para traer data y basandose en eso desplegar la informacion al cliente. Ej: En web apps el manejo del DOM haciendo un fetch a la data de un REST server.
+
+La idea principal es un backend que nos sirva con la data que necesitamos.
+
+Diferentes tipos de respuestas son necesarias
+REST: Representational State Transfer
+La explicacion sencilla que le gusta al instructor es: Transferimos informacion en vez de interfaces para usuario. En vez de HTML simplemente transmitimos la data y dejamos que el frontEnd se encargue de esa data.
+
+No esta mal renderizar el HTML en el servidor y enviarselo al cliente, es un patron comun para un monton de web apps pero para otras aplicaciones tal vez vamos a querer construir un frontend desacoplado del backend.
+
+Solo la respuesta y la data de la peticion cambia, no la logica del backend. Validaciones, manejo de archivos, interaccion con el servidor, etc. Sigue siendo igual con MVC y REST APIs. Estas se diferencia mayormente por el tipo de data que esperamos de la respuesta.
+
+2. Acceder a informacion con REST APIs
+Tenemos un cliente que puede ser una Mobile App, una SPA y en el servidor tenemos construida nuestra API. Una ventaja de las API es que la misma puede ser utilizada por multiples clientes.
+Podemos tener una aplicacion cualquiera que consuma una Service API, nosotros tambien podemos generar una Service API paga (o no) para otros. 
+En ambos casos mecionados intercambiamos UNICAMENTE informacion entre el front y back. ¿En que formato se presenta esta informacion? Hay diferentes tipos de data que podemos adjuntar a la peticion y la respuesta: 
+HTML: En el curso renderizabamos el HTML en el servidor y lo enviabamos al cliente. El codigo HTML contiene tanto la data y la estructura (HTML, CSS), por lo tanto podemos decir que contiene la UI. El problema que tenemos es que si solo queremos datos es innecesario renderizar HTML y es muy dificil parsear la informacion del HTML.
+Texto plano: Es solo data, no existe una estructura. No hay UI. Es innecesariamente dificil de parsear, es facil para entender para humanos, pero para computadoras no lo es, no existe un patron claro.
+XML: Es una especie de HTML. Permite transmitir informacion con cierto formato. No hay UI. Es facil de leer para la maquina pero esta bastante "cargado" de infromacion. Se necesita un XML-parser.
+JSON: JavaScript Object Notation. Es el que utilizaremos en el curso. Permite transmitir informacion con cierto formato. No hay UI. Es facil de leer para la maquina y utiliza un formato mucho mas acotado. Puede convertirse facilmente a JavaScript.
+Otros.
+
+3. Entendiendo Routing y Metodos HTTP
+Tenemos un cliente, un servidor con su logica e interaccion con base de datos, archivos, etc.
+Enviamos la peticion del cliente al servidor. ¿Como se envia la peticion? se envia con JavaScript asincrono (FETCH, AXIOS, AJAX)/Metodos especiales de la platafroma, y con una combinacion del metodo/verbo HTTP y la ruta al servidor.
+Lo escencial es que enviamos peticiones normales, que simplemente no esperan una respuesta HTM y enviamos una combinacion de metodo HTTP y un path al servidor. (GET /posts - GET /posts/:postId - etc).
+En el mundo de las API los GET /posts - GET /posts/:postId - etc. son llamados "API Endpoints" (combinacion del metodo/verbo HTTP y la ruta al servidor). Estos endpoints son tratados del lado del servidor con la logica que les asignemos.
+
+Metodos HTTP (Verbos HTTP)
+Hay mas que GET y POST - Cuando trabajamos solo con el navegador y no con JS, los links y formularios del navegador (HTML) solo comprenden estos dos verbos de manera nativa. 
+Al usar JS asincrono u otro tipo de cliente HTTP para una plataforma, tenemos acceso a mas metodos HTTP.
+GET -> Recibimos un recurso desde el servidor.
+POST -> Enviamos un recurso hacia el servidor (Crear/añadir).
+PUT -> Enviamos un recurso hacia el servidor (Crear/Sobreescribir).
+PATCH -> Enviamos un recurso hacia el servidor (Actulizar partes del recurso existente).
+DELETE -> Elimina un recurso del servidor.
+OPTIONS -> Opciones que determinan si la peticion es valida o no (envio automatico por el navegador).
+
+En teoria podemos hacer lo que queremos con estos verbos, pero seguimos una convencion como la listada anteriormente.
+
+4. REST APIs - Principios escenciales
+"Uniform Interface": Define que que nuestra API debe tener API Endpoints definidos, con definidas peticiones y una estructura clara de respuesta con datos. "Tiene que ser predecible y bien documentada".
+"Stateless interactions": El servidor y el cliente no guardan ningun historial de conexion, cada peticion se maneja de manera separada, se la trata como si no hubiese existido ninguna peticion anterior. No le importa que cliente la utilice. El cliente es independiente del servidor y viceversa.
+
+Principios que debemos saber:
+"Cacheable": Quiere decir que en nuestra API REST podemos enviar unos headers que le dicen al cliente por cuanto tiempo la peticion es valida.
+"Client-Server": Separacion del cliente y el servidor. "Client is not concerned with persistent data storage"
+"Layered-System": El servidor puede enviar la peticion entrante a otras APIs
+"Code on Demand": La API REST podria transferir codigo ejecutable del servidor al cliente.  
+
+5. REST API Project
+https://expressjs.com/es/api.html
+https://expressjs.com/es/api.html#res.json
+Vamos a utilizar Express para construir la API. Vamos a utilizar los routes, etc. Basicamente como hicimos en la app que veniamos desarrollando, lo que va a cambiar es como definimos un PATH de una ruta y las respuestas.
+Con PostMan vamos a realizar las peticiones.
+
+Las respuesta van a ser un .json(), en express automaticamente setea cierta caracteristicas de los headers y envia la respuesta una vez es llamado (leer la documentacion). Con un status asignado. Los codigos de HTTP son super importantes para pasarle informacion al cliente para que pueda saber el estado de su peticion y sepa que hacer.
+
+Ejemplo:
+exports.getPosts = (req, res, next) => {
+    res.status(200).json({
+        posts : [
+            {
+                title : "First Post",
+                content : "This is the first post"
+            }
+        ]
+    });
+}
+
+JSON data es lo que esperamos para la peticion y para la respuesta. Vamos a necesitar un middleware que parsee la informacion JSON que nos llega por la peticion. Para ello vamos a utilizar el middleware que nos provee express, llamado .json(). Se ejecuta como middleware y el objeto que lo lanza es el mismo que utilizamos cuando ejecutamos express y lo asignamos a una variable.
+
+Ejemplo:
+const express = require("express");
+const app = express();
+
+app.use(express.json());
+
+Controlador POST:
+exports.createPosts = (req,res,next) => {
+    const title = req.body.title;
+    const content = req.body.content;
+    //Create post in db
+    res.status(201).json({
+        message : "Post created successfully",
+        post: {
+            id : Date.now(),
+            title : title,
+            content : content
+        }
+    })
+}
+En Postman vamos a ir a Body, seleccionaremos la opcion de "raw" y le indicaremos dentro que es un formato JSON. Luego vamos escribir en JSON la peticion. Vinculado en la seccion la coleccion.
+
+Ejemplo:
+{
+    "title" : "My second Post!",
+    "content" : "This is the content of my second post."
+}
+
+6. REST APIs, Clientes y Errores CORS
+https://en.wikipedia.org/wiki/Cross-origin_resource_sharing#:~:text=CORS%20defines%20a%20way%20in,allowing%20all%20cross%2Dorigin%20requests.
+https://www.youtube.com/watch?v=h-WtIT6gCBk
+https://www.youtube.com/watch?v=4KHiSt0oLJ0
+https://developer.mozilla.org/es/docs/Web/HTTP/CORS/Errors/CORSMissingAllowOrigin
+https://developer.mozilla.org/es/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
+https://developer.mozilla.org/es/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
+https://developer.mozilla.org/es/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
+https://developer.mozilla.org/es/docs/Glossary/Preflight_request
+A la hora de construir una SPA que interactue con una API puede tener el error "No 'Access-Control-Allow-origin' header is present in the request resource", que esta estrictamente relacionado con CORS.
+CORS es un acronimo de Cross-Origin Resource Sharing y por default no esta permitido por los navegadores.
+Si tenemos un cliente y un servidor y corren en el mismo dominio (localhost:3000 x ejemplo -> Por algun motivo al hacer un GET entre distintos puertos no salta el error, para un POST si) no tendriamos ningun problema. Anteriormente no teniamos problemas al estar renderizando HTML en el servidor y sirviendo tambien en el servidor.
+Si el cliente y el servidor tienen distintos dominios tendremos errores de tipo CORS, lo que no permite compartir recursos entre distintos servidores/dominios/origenes. Sin embargo podemos sobreescribir este mecanismo que tiene sentido para algunas aplicaciones, para una API REST no. Queremos permitir que nuestro servidor comparta informacion, queremos ofrecer datos desde nuestro servidor a diferentes clientes, y estos clientes normalmente no van estar hosteados en el mismo servidor donde nuestra API esta. 
+Para que el navegador pueda aceptar las respuestas que envia nuestra API tenemos que hacer ciertas configuraciones en el servidor, este problema NO se resuelve del lado del cliente. Vamos a setear unos headers especiales en CUALQUIER respuesta que envie nuestro servidor. Por lo tanto podemos decir que en nuestro archivo donde se inicia el servidor, agregandolo como un middleware es una buena opcion.
+res.setHeader('Access-Control-Allow-Origin', "*"); Le indicamos como primer argumento que los recursos de la respuesta pueden ser compartidos con el origen dado y como segundo todos los dominios que pueden acceder a nuestro servidor.
+res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE"); Le indicamos como primer argumento que pueden utilizar metodos HTTP y como segundo que tipo de metodos estan permitidos. 
+res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization"); Le indicamos como primer argumento que pueden setear headers y como segundo que tipo de headers.
+
+Ejemplo:
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    next();
+});
+
+7. Envio de peticiones POST
+Las peticiones POST (Como las de tipo PUT, PATCH) deben tener ciertas cabeceras para que a la hora de llegar al servidor se cumplan los requisito que este pide para hacer una accion. Por ejemplo si sabemos que debe ser JSON la peticion, deberiamos setear en el fetch (AJAX, Axios y otro tipo de metodos asincronicos tambien) el content-type a JSON, el body parsearlo a JSON, etc.
+
+Ejemplo con fech:
+fetch("http://localhost:8080/feed/post", {
+    method : 'POST',
+    headers : {
+        'Content-Type' : "application/json"
+    },
+    body : JSON.stringify({
+        title : "Test HTML",
+        content : "Created via HTML"
+    })
+})
+.then(res => res.json())
+.then(resData => console.log(resData))
+.catch(err => console.log(err));
+
+Una peculiaridad es que se envian dos peticiones, una es de tipo "preflight" que contiene las opciones (las mecionamos anteriormente cuando vimos los verbos HTTP). Estas opciones son enviadas automaticamente por el navegador y le pasa al servidor las configuraciones que realizamos, si las configuraciones no son correctas (un header que no esta permitido o es erroneo, o algun tipo de error de este estilo) el navegador actua de "cortafuego" y no deja que la peticion con todos los datos se envien.
+
+8. Resumen del modulo
+REST Concepts & Ideas
+REST APIs basan todo en transferencia de datos, no intercambia logica de la UI.
+Las REST APIs son servidores de Node normales que exponen diferentes endpoints (Http method + path) para que los clientes envien peticiones.
+JSON es el formato mas comun para las peticiones y respuestas.
+Las REST APIs estan totalmente separadas del cliente que las utiliza. Tenemos un frontend y un backend totalmente independiente.
+
+Requests and Responses
+Ajuntamos datos en formato JSON y le dejos saber al otro que se envia en JSON seteando el 'Content-Type' : 'application/json'
+Errores CORS ocurren cuando la API no setea los headers de CORS. 
+
+Network TAB
+En la pestaña Network de nuestro navegador vamos a poder ver que nos devolvio el servidor en la peticion en caso de que el frontEnd de una pagina no nos muestre nada especifico.

@@ -70,6 +70,8 @@ const productSchema = new Schema({
     },
 })
 
+Puedo agregarle un segundo objeto a los parametros del schema para agregar timestamps y otros elementos. Ej: new Schema({//MODELO}, {timestamps : true})
+
 Una vez creado el esquema vamos a generar el modelo. El modelo se va a definir con el metodo de mongoose llamado .model("NOMBRE_DEL_MODELO, ESQUEMA"). Generalmente el modelo se exporta para trabajar con el asi que esta funcion se realiza en el mismo module.exports, aunque puedo asignarlo a una variablen y luego exportarla.
 
 Ejemplo:
