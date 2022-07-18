@@ -30,7 +30,7 @@ const fileStorage = multer.diskStorage({
         cb(null, './images');
     },
     filename : (req, file, cb) => {
-        cb(null, new Date().getTime() + file.originalname);
+        cb(null, new Date().getTime() + '-' + file.originalname);
         //cb(null, new Date().toISOString() + "-" + file.originalname); -> Windows doesn't like ':' in the path
     } 
 });
