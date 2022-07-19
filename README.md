@@ -27,3 +27,5 @@ Secciones
 22. NOT IMPLEMENTED - Adding Payments
 23. Working with REST APIs - The Basics
 24. Working with REST APIs - The Practical Application
+25. Understanding Async-Await in Node.js
+26. Understanding Websockets and Socket.io

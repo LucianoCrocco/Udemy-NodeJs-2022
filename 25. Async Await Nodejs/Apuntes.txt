@@ -1,0 +1,42 @@
+25. Understanding Async-Await in Node.js
+
+Useful resources:
+Async-await - More Details: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function
+
+
+¿Que es Async-Await?
+https://www.geeksforgeeks.org/difference-between-promise-and-async-await-in-node-js/#:~:text=Async%2FAwait%20is%20used%20to,which%20is%20easier%20to%20understand.
+https://v8.dev/features/top-level-await
+Async-Await son dos palabras reservadas propias del lenguaje JavaScript. Estan disponibles para navegadores modernos y proyectos frontend/backend.
+Estas dos palabras claves nos permiten escribir peticiones asincronas en una "sintaxis sincrona". Se ve como si fuese sincrono pero sigue siendo asincronica.
+Con "async" antes de "function() {}" o "() => {}" vamos a indicar que que la funcion es asincrona.
+La palabra "await" tiene que estar contenida dentro de una funcion asincrona en JavaScript y permite bloquear el hilo de ejecucion hasta que sea lo que sea que este haciendo una peticion asincrona termine. Con NodeJs se implemento "Top level await" Lo que permite utilizar "await" fuera de una funcion "async".
+Todo lo async-await va dentro de un try-catch.
+Las operacioens de Mongoose (find, count, etc) devuelven "Promise like object", si queremos un objeto promesa concatenamos .exec() al final de la ejecucion. Ambas opciones van a tratarse bien y no nos va a importar mucho, pero es bueno saberlo.
+Detras de escenas async-await utiliza promesas donde implementa una especie de .then .catch, se lo considera "azucar sintactico". Hace el codigo mas legible, no cambia el codigo de JS detras de escenas. Se podria decir que todo lo que esta despues del "await" esta en un ".then()"
+
+Ejemplo:
+exports.getPosts = async (req, res, next) => {
+    const currentPage = req.query.page || 1;
+    const perPage = 2; //Same as frontend
+    let totalItems;
+    try {
+        totalItems = await PostModel.countDocuments()
+        const posts = await PostModel.find().skip((currentPage - 1) * perPage).limit(perPage);
+        if(!posts){
+            const error = new Error("Could not find posts.");
+            error.statusCode = 404;
+            throw error;
+        }
+        res.status(200).json({
+            message : 'Fetched posts successfully.',
+            posts : posts,
+            totalItems : totalItems
+        })
+    }catch(err) {
+        if(!err.statusCode){
+            err.statusCode = 500;
+        }
+        next(err);
+    }
+}
