@@ -1,5 +1,6 @@
 const {validationResult} = require("express-validator");
 const PostModel = require("../models/post");
+const UserModel = require("../models/user");
 const fs = require("fs");
 const path = require("path");
 
@@ -76,22 +77,30 @@ exports.createPost = (req,res,next) => {
     const title = req.body.title;
     const content = req.body.content;
     const imageUrl = req.file.path.replace("\\" ,"/");
+    let creator;
     // console.log(title + " " + content);
     //Create post in db
     const post = new PostModel({
         title : title,
         content : content,
         imageUrl : imageUrl,
-        creator : {
-            name : "Luciano"
-        }
+        creator : req.userId
     })
 
     post.save()
     .then(result => {
+        return UserModel.findById(req.userId)
+    })
+    .then(user => {
+        creator = user;
+        user.posts.push(post);
+        return user.save()
+    })
+    .then(result => {
         res.status(201).json({
             message : "Post created successfully",
-            post: result
+            post: post,
+            creator : {_id : creator._id, name : creator.name}
         });
     })
     .catch(err => {
@@ -135,6 +144,12 @@ exports.updatePost = (req, res, next) => {
             error.statusCode = 404;
             throw error; //el .catch lo agarra.
         }
+        if(post.creator.toString() !== req.userId){
+            const error = new Error("Not authorized.");
+            error.statusCode = 403;
+            throw error; //el .catch lo agarra.
+        }
+
         if(imageUrl !== post.imageUrl){
             clearImage(post.imageUrl);
         }
@@ -170,8 +185,20 @@ exports.deletePost = (req, res, next) => {
             throw error; //el .catch lo agarra.
         
         }
+        if(post.creator.toString() !== req.userId){
+            const error = new Error("Not authorized.");
+            error.statusCode = 403;
+            throw error; //el .catch lo agarra.
+        }
         clearImage(post.imageUrl);
         return PostModel.findByIdAndRemove(postId);
+    })
+    .then(result => {
+        return UserModel.findById(req.userId)
+    })
+    .then(user => {
+        user.posts.pull(postId); // Agarra un elemento de la coleccion que coincida con el Id y lo borra.
+        return user.save();
     })
     .then(result => {
         res.status(200).json({

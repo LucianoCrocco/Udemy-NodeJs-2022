@@ -16,7 +16,7 @@ Handling Requests & Responses --> Parse + Send JSON data, no generamos vistas. E
 Request Validation --> Sin cambios
 Database Communication --> Sin cambios
 Files, Uploads, Downloads --> Sin cambios (solo el lado del cliente cambia).
-Sessions & Cookies -> No se utilizan Sesiones ni Cookies (La relacion entre ellos. Para JWT vamos a usar Cookies). Cada peticion es tratada de manera separada
+Sessions & Cookies -> No se utilizan Sesiones ni Cookies. Cada peticion es tratada de manera separada y son "stateless".
 Authentication -> Diferente enfoque para la autenticacion.
 
 2. Envio de archivos y JSON
@@ -58,3 +58,100 @@ fetch(url, {
 })
 
 3. ¿Como funciona la autenticacion en una API REST?
+https://jwt.io/
+En un esquema cliente-servidor de una API mantenemos el envio de datos desde el cliente que luego tienen que ser validados en el servidor (Ej email, password, etc). No vamos a establecer sesiones, las API son "stateless" y no les importa el cliente "Cada peticion debe tratarse como unica y diferente al resto. El servidor no va a almacenar informacion sobre el cliente - Standalone treatment".
+Al cliente le vamos a almacenar un Token, ese token será generado en el servidor y va a tener informacion que solamente puede ser validada en el servidor. El token se va a almacenar en el navegador del cliente, y el cliente va a poder adjuntar este token para cada peticion subsecuente que envie al servidor donde se requiera este token.
+Este token no se puede editar ni crear en el lado del cliente, ya que el servidor utiliza cierto algoritmo que no se puede falsear ya que no conoce la clave privada que se utilizo para generarlo.
+
+¿Que contiene ese Token?
+JSON Data
+Signature generada en el servidor
+El contenido nos devuelve un JSON Web Token (JWT). Este token es lo que se le retorna al cliente y la firma solo puede ser verificada en el servidor.
+
+4. Implementacion de un JWT
+https://www.npmjs.com/package/jsonwebtoken
+Seguridad y guardado en el front: https://www.youtube.com/watch?v=894seNhONF8
+Instalamos el paquete de npm y lo importamos donde lo vayamos a utilizar como veniamos haciendo con el 99% de los paquetes.
+Podemos generar un token con el metodo .sign() que recibe varios argumentos. El primero es un objeto JS con la informacion que vamos a querer guardar. El segundo va a ser el "secreto" que es la clave privada que se utilizará para firmar el JWT, solo la conoce el servidor por lo tanto el cliente no la puede falsear. Como tercer y ultimo argumento va a estar la configuracion de ese token, la expiracion, algoritmo de hasheo, etc.
+Se suele poner expiracion al token ya que el token podria ser robado, si el cliente no cierra su sesion en el navegador otra persona puede copiarlo.
+Una vez ejecutado este metodo y guardado en una varibale, vamos a retornarlo al front adjuntando en la respuesta JSON el token. Queda en el front decidir como se va a almacenar ese token.
+
+Ejemplo:
+const JWT = require("jsonwebtoken");
+
+const token = JWT.sign({
+    email : loadedUser.email,
+    userId : loadedUser._id.toString()
+}, "SECRET", {
+    expiresIn : '1h'
+})
+
+res.status(200).json({
+    token : token,
+    userId : loadedUser._id.toString()
+})
+
+5. Uso y validacion del Token
+https://jwt.io/introduction/
+https://www.quora.com/Why-is-Bearer-required-before-the-token-in-Authorization-header-in-a-HTTP-request
+Tenemos que estar seguro que el cliente envie el token que al servidor para todas las peticiones que necesiten la identificacion de ese cliente (generar/mirar una ruta, eliminar algo, ver detalles, ver solo lo que el cliente subio, etc). Para ello vamos validar la existencia del token y que sea valido antes de que se permite continuar con la peticion (Si el token no es valido o no existe, el cliente no puede ingresar a una ruta donde se le muestre una lista de post de cierto Id). Por ejemplo en nuestra API, todas las rutas de "posts" no deben ser accesibles para un usuario que no tenga este token (el token se genera y se lo envia al front end una vez se logea, el front lo almacena y debe enviarlo).
+
+Frontend: El token puede ir como query paramter, como body (no es recomendable pq GET no tiene body) y en los headers. La ultima opcion es la mejor y la mas recomendada. Enviar el token por los headers mantiene la URL limpia y tiene sentido ya que es meta-informacion y el token puede entrar en esa categoria.
+Teoricamente puedo añadir cualquier header pero el header que oficialmente se utiliza para pasar informacion sobre autenticacion al backend es el de "Authorization". En el backend los headers que podiamos setear de nuestra API eran "Content-Type" y "Authorization", lo cual hay que tener en cuenta sino fallaria por un error CORS. 
+Seteamose el header como: Authorization : "Bearer " + token. Se pone Bearer como una convencion para identificar el tipo de token que tenemos, un token bearer es simplemente un token de autenticacion que se utiliza para JTW's. No es necesario pero es normal trabajar con esta convencion.
+
+Ejemplo:
+fetch('http://localhost:8080/feed/posts?page='+ page, {
+    headers : {
+        Authorization : 'Bearer' + this.props.token
+    }
+})
+
+Backend: Para validar un token tenemos que importar el modulo de jsonwebtoken, y vamos a generar un middleware antes del acceso al controlador de las rutas para saber si esa peticion tiene el token y el token en si es valido.
+Para obtener el token podemos acceder a los headers de la peticion con req.get("HEADER_NAME"); y como enviamos "Bearar " + token; vamos a hacer un split cuando encuentre ese espacio y quedarnos solo con el token.
+Una vez obtenido necesitamos validarlo, para ello podemos verificar si es valido utilizando el metodo del paquete importado .verify(token, SECRET), verify va a decoficiarlo y verificarlo. El secreto tiene que ser el mismo que utilizamos para firmar el token. Verify se ejecuta dentro de un try-catch en caso de ser sincronico, ya que si falla en decodificarlo lanza un error, caso asincronico leer al documentacion. Como tercer argumento puede recibir opciones, por ejemplo el tipo de algoritmo utilizado, en caso de haberlo cambiado en la firma cuando lo enviamos al cliente podriamos setear esa opcion.
+
+
+Ejemplo:
+const JWT = require("jsonwebtoken");
+
+module.exports = (req, res, next) => {
+    const authHeader = req.get("Authorization");
+    if(!authHeader){
+        const error = new Error("Not autheticated");
+        error.statusCode = 401;
+        throw error;
+    }
+
+    const token = authHeader.split(" ")[1];
+    let decodedToken;
+    try {
+        decodedToken = JWT.verify(token, process.env.SECRET_JWT);
+    }
+    catch (err){
+        err.statusCode = 500;
+        throw err;
+    }
+    // if(!decodedToken){ -> En teoria no hace falta, ya que si no puede decodificarlo va driecto al catch.
+    //     const error = new Error("Not autheticated");
+    //     error.statusCode = 401;
+    //     throw error;
+    // }
+    req.userId = decodedToken.userId; // Lo envia el front al back y lo utilizo para conectarlos.
+    next();
+}
+
+Luego lo importamos y agregamos en todas las rutas que sean necesarias antes de validaciones y del controlador.
+
+6. Resumen del modulo
+
+From "Classic" to REST API
+La mayoria del codigo server-side no cambia, solo las peticiones + respuestas se ven afectadas.
+Existe una mayori varidad de metodos HTTP.
+Al servidor de la REST API no le importa el cliente. Las peticiones son tratadas de manera aislada => No hay sesiones.
+
+Authentication
+Como no se utilizan las sesiones, la autenticacion funciona de manera diferente.
+Cada peticion tiene que poder enviar algun dato que verifique que la peticion esta autenticada.
+JSON Web Token (JWT) son una forma comun de guardar informacion de la autenticacion en el cliente para luego validar esa info con el backend.
+JTWs son firmados en el servidor y solo pueden ser validados en el servidor.

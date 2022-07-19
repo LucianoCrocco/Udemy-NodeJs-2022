@@ -149,6 +149,7 @@ Product.updateOne({_id : prodId}, {title : updatedTitle, price : updatedPrice, i
 
 8. Eliminar un documento
 Le pasamos el id a la funcion findByIdAndRemove() y esta se encagara de borrar el documento en la coleccion.
+Mongoose posee el metodo MODELO.ARRAY.pull(ID) con el cual vamos a poder eliminar un objeto de la coleccion en caso de que el ID coincida con un ID de la coleccion.
 
 Ejemplo:
 const prodId = req.body.productId;
