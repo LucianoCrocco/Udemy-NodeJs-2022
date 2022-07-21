@@ -1,0 +1,119 @@
+26. Understanding Websockets and Socket.io
+
+Websockets es un protocolo que nos permite crear servicios web en tiempo real.
+
+¿Que hay en este modulo?
+¿Por que utilizariamos servicios web en tiempo real y que son?
+Como añadir comunicacion en tiempo real en una Node App
+
+Useful resources:
+Socket.io Official Docs: https://socket.io/get-started/chat/
+Alternative Websocket Library: https://www.npmjs.com/package/express-ws
+
+
+1. ¿Que son los Websockets y por que deberiamos usarlos?
+https://socket.io/
+https://www.npmjs.com/package/socket.io
+¿Que pasa si queremos informar al cliente que algo cambio en el servidor? Deberiamos utilizar websockets en vez de http. Http es el protocolo que utilizamos hasta ahora, donde recibimos una peticion y enviamos una respuesta. Websockets esta creado en base a HTTP, establecido via HTTP, utiliza algo llamado "http handshake" para modernizar el protocolo HTTP en el protocolo de Websocket. El protocolo Websocket simplemente habla de como la informacion debe ser intercambiada. 
+El protoclo es algo que no tenemos que manejar de manera activa, el navegador y el servidor se comunican a traves de un protocolo y ese protocolo establece como la comunicacion se va a dar.
+Con http es peticion y respuesta. Con Websockets el servidor hace un "Push data" al cliente, podemos tambien enviar del cliente al servidor. Es normal utilizar ambos protocolos para una aplicacion de Node o cualquier aplicacion en general.
+
+Un chat es un buen ejemplo. A le pasa al servidor un mensaje, pero con lo que vimos hasta el momento no hay manera de que ese mensaje llegue a B salvo que B haga una peticion. La idea es poder recibir ese mensaje de A y desde el servidor enviarlo a B sin la necesidad de una peticion. 
+
+Existe infinidad de informacion, metodos, paquetes, etc. El mas conocido es Socket.IO, este es un paquete que utiliza websockets (setea todo detras de escenas para usar el protocolo) y nos da muchas caracteristicas convenientes alrededor de este protocolo. Hace muy facil setear un canal de Websocket entre un cliente y el servidor y el uso de ese canal.
+
+No es necesario usar Socket.Io para utilizar el protocolo, podriamos utilizar otras opciones mas "crudas" que Socket.Io.
+
+Vamos a ver algo basico, como añadirlo a un proyecto y como establecer una comunicacion basica.
+
+Socket.io debe ester instalado en el servidor y en el cliente porque el cliente se comunicará a través de websockets por lo tanto tenemos que establecer esa comunicacion en el backend y el frontend
+
+2. Seteo de Socket.io en el servidor
+https://www.npmjs.com/package/socket.io
+https://socket.io/get-started/chat#integrating-socketio
+Se importa en el punto de entrada del proyecto y ahi vamos a agregar las conexiones de Socket.Io que vamos a exponer. Vale recordar que las rutas HTTP y las rutas de Websockets no se van a interferir entre si ya que utilizan diferentes protocolos.
+El seteo de IO lo podemos hacer luego de crear nuestro servidor (depende como tengamos seteado el SV, en la documentacion es distinto que en mi codigo), para generar la conexion que se crea POR ENCIMA de HTTP (Websockets esta construido encima de HTTP, y el servidor establecido es http) vamos a pasarle el servidor a la funcion Server del paquete. Como segundo parametro le pasamos la configuracion de CORS que vayamos a utilizar. Ese objeto que guardamos en una variable genera todas las configuraciones restantes detras de escena. 
+Podemos setear escucha de eventos con el objeto que guardamos. Con el metodo .on("conection", CALLBACK) vamos a poder esperar nuevas conexiones de un cliente. Luego vamos a tener un callback que recibe un socket con la conexion entre el servidor y el cliente, el callback se va a ejecutar por cada nuevo cliente que se conecte.
+
+Ejemplo:
+const { Server } = require("socket.io");
+const server = app.listen(8080); -> No hago un http.createServer como en la documentacion, hago el listen directo con el app del paquete Express y esto me devuelve el SV.
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:3000",
+        methods: ["GET", "POST"]
+    }
+})
+io.on("connection", socket => {
+    console.log("Client Connected");
+})
+Mas adelante vamos a mover todo esto a un archivo para poder utilizar las instancias de IO a traves de multiples archivos de nuestro proyecto.
+
+3. Seteo de Socket.io en el cliente
+https://www.npmjs.com/package/socket.io-client
+Se importa y se llama donde se vaya a usar. La url incluye http ya que websocket esta construido encima de http. La funcion que tenemos en la varibale donde importamos el paquete hara todo el trabajo pesado detras de escenas.
+Gurdamos el socket ya que luego nos va a servir para conectarnos con los eventos que transmite el servidor.
+
+Ejemplo:
+
+import openSocket from "socket.io-client";
+const socket = openSocket("http://localhost:8080"); -> URL del servidor
+
+4. Compartir instancias de IO a traves de archivos
+Para poder reutilizar el mismo objeto IO que maneja la misma conexion que es expuesta vamos a crear un archivo socket.js. Dentro vamos a exportar dos metodos: init que recibe el servidor http y crear la conexion de websockets como vimos anteriormente. Como segundo vamos a retornar el objeto Io que se crea en el primer metodo.
+
+Ejemplo:
+
+    En socket.js
+const { Server } = require("socket.io");
+let io;
+
+module.exports = {
+    init : httpServer => {
+        io = new Server(httpServer, {
+            cors: {
+                origin: "http://localhost:3000",
+                methods: ["GET", "POST"]
+            }
+        });
+        return io;
+    },
+    getIo : () => {
+        if(!io){
+            throw new Error("Socket.io not initialized.")
+        }
+        return io;
+    }
+}
+
+    En app.js
+const socketFile = require("./socket"); -> El archivo generado
+const io = socketFile.init(server); -> Ejecuto la funcion que nos genera el socket y retorno la conexion.
+io.on("connection", socket => { -> Tal cual como vimos antes.
+    console.log("Client Connected");
+})
+
+De esta manera vamos a poder importar en cualquier archivo que necesitemos la conexion de Socket.io.
+
+Para enviar una respuesta a todos los usuarios conectados a traves de Socket Io vamos a disponer de metodos que nos van a ayudar. Uno de ellos es emit(), exite tambien broadcast() pero la diferencia es que emit envia a todos los usuarios y broadcast envia a todos los usuarios menos al que genero la peticion. Dentro de ambos metodos como primer argumento va a recibir el nombre del evento y como segundo la data que se envia, puede ser un objeto JS.
+
+Ejemplo:
+const io = require("../socket");
+
+io.getIo().emit("posts", {
+    action : 'Create',
+    post : {...post._doc, creator : {_id : req.userId, name : user.name}}
+})
+De esta manera estamos enviando a todos los clientes conectados. Ahora tendremos que ajustar el frontEnd para pueda reaccionar a estos eventos.
+
+En el front con el objeto socket que nos dio la conexion vamos a tener el metodo .on() donde le vamos a pasar el evento que se transmitio desde el servidor y como segundo parametro el callback de lo que deberia hacer. El callback recibe la data que envio el evento desde el servidor. 
+La logica de lo que pasa en el cliente depende del frontEnd, nosotros desde el back cuando se genera una peticion a una ruta devolvemos un evento con datos para que el frontEnd haga lo que tenga que hacer, desde escuchar ese evento hasta codear el callback.
+
+Ejemplo:
+import openSocket from "socket.io-client";
+const socket = openSocket("http://localhost:8080");
+socket.on("posts", data =>{
+    if(data.action === 'Create'){
+        this.addPost(data.post);
+    }
+})
