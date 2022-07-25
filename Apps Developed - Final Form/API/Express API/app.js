@@ -5,7 +5,6 @@ require("dotenv").config();
 const path = require("path");
 const multer = require("multer");
 const authRoutes = require("./routes/auth");
-// const { Server } = require("socket.io");
 const socketFile = require("./socket");
 
 
@@ -17,7 +16,7 @@ const fileStorage = multer.diskStorage({
         cb(null, 'images')
     },
     filename: (req, file, cb) => {
-        cb(null, /*uuidv4()*/ Date.now() + "-" + file.originalname);
+        cb(null, Date.now() + "-" + file.originalname);
     }
 })
 
@@ -59,16 +58,8 @@ app.use((error, req, res, next) => {
 mongoose.connect(MONGODB_URI)
 .then(result => {
     const server = app.listen(8080);
-    // const io = new Server(server, {
-    //     cors: {
-    //         origin: "http://localhost:3000",
-    //         methods: ["GET", "POST"]
-    //     }
-    // })
     const io = socketFile.init(server);
-    io.on("connection", socket => {
-        console.log("Client Connected");
-    })
+    io.on("connection")
 })
 .catch(err => console.log(err));
 

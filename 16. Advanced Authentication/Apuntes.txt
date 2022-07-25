@@ -7,8 +7,6 @@ Reseteo de contraseñas
 Autorizacion -> Solo los usuarios que crearon un post pueden editar el propio
 
 
-
-
 1. Creacion de un Token para resetear contraseñas
 Para hacer el reset de una contraseña debemos ser capaces de enviar un email con un token para cambiar la contraseña. Este token debe ser unico, tener una fecha de expiracion y debemos guardarlo en nuestra base de datos. 
 NodeJs tiene una libreria criptografica, por lo que vamos a utilizarla para generar el token. La libreria se llama "crypto". Esta libreria nos ayuda a crear valores unicos, seguros y random.

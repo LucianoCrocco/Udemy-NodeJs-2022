@@ -9,6 +9,7 @@ https://mongoosejs.com/docs/
 Useful resource:
 Mongoose Official Docs: https://mongoosejs.com/docs/
 
+
 1. ¿Que es Moongose?
 https://mongoosejs.com/docs/
 Moongose es un ODM (Object Document Mapping), muy similar al ORM Sequelieze. La idea es la misma, no escribir las consultas, modelos, etc. detrás de escena para que el ODM se encargue de ello.

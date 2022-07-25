@@ -40,10 +40,6 @@ exports.getIndex = (req, res, next) => {
     });
 }
 exports.getProducts = (req, res, next) => {
-    // Product.find()
-    // .then(products => {
-    //     res.render("./shop/product-list", {prods : products, pageTitle : "All Products", path : "/products"});
-    // })
     const page = parseInt(req.query.page) || 1;
     let totalItems;
     product.find()
@@ -147,18 +143,6 @@ exports.getInvoice = (req, res, next) =>{
         pdfDoc.fontSize(20).text(`Total price: $${totalPrice}`);
 
         pdfDoc.end();
-        // fs.readFile(invoicePath, (err, data) => {
-        //     if(err) {
-        //         return next(err);
-        //     }
-        //     res.setHeader("Content-Type", "application/pdf");
-        //     res.setHeader("Content-Disposition", `inline; filename=${invoiceName}`)
-        //     res.send(data);
-        // })
-        // const file = fs.createReadStream(invoicePath);
-        // res.setHeader("Content-Type", "application/pdf");
-        // res.setHeader("Content-Disposition", `inline; filename=${invoiceName}`);
-        // file.pipe(res);
     })
     .catch(err => next(err))
    

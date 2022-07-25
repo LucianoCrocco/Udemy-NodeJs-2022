@@ -94,7 +94,6 @@ app.use(errorController.get404);
 
 //Error middleware
 app.use((error, req, res, next) => {
-    // res.redirect(`/${error.httpStatusCode}`);
     console.log(error);
     res.status(500).render("500", {pageTitle : "Server Side Error", path : "/500", isAuthenticated: req.session.isLoggedIn})
 })

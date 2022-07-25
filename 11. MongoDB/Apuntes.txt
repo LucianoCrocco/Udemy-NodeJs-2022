@@ -8,10 +8,10 @@ https://www.mongodb.com/docs/manual/
 https://www.mongodb.com/compatibility/json-to-mongodb
 
 Useful resource:
-
 MongoDB Official Docs: https://docs.mongodb.com/manual/core/security-encryption-at-rest/https://docs.mongodb.com/manual/
 SQL vs NoSQL: https://academind.com/learn/web-dev/sql-vs-nosql/
 Learn more about MongoDB: https://academind.com/learn/mongodb
+
 
 1. ¿Que es MongoDb?
 MongoDb es el nombre de la compañia que desarrollo esta tecnologia y tambien del producto mas famoso que tienen, es decir, el motor MongoDb para guardar datos de manera NoSQL.
